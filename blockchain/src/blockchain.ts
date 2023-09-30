@@ -1,11 +1,25 @@
-let it: String = "Addson";
-let age: number = 47;
-let niver: Date = new Date(1976, 9, 16);
+import Block from './block';
 
-console.log(presentation(it, age, niver));
+const block = new Block(5, 'XXX');
 
-function presentation(it: String, age: number, niver: Date): string {
+console.log(block);
 
-    return "Hi, that is " + it + " has " + age + " years old and his niver is " + niver;
+block.created = new Date(2023, 9, 16);
 
+console.log(blockPresentation(block));
+
+function blockPresentation(block: Block): string {
+  return (
+    ' This Block with hash: ' +
+    block.hash +
+    '\n ' +
+    'and with index: ' +
+    block.index +
+    '\n ' +
+    'was created in ' +
+    block.created +
+    '\n ' +
+    'and because these set, this block is valid: ' +
+    block.isValid()
+  );
 }
