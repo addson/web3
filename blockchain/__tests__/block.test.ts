@@ -22,4 +22,11 @@ describe('Block tests', () => {
     const valid = block.isValid();
     expect(valid).toEqual(false);
   });
+
+  it('Should NOT be valid (created date)', () => {
+    const block = new Block(1, 'abc');
+    block.created = new Date(1976, 9, 16);
+    const valid = block.isValid();
+    expect(valid).toEqual(false);
+  });
 });
