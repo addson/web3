@@ -10,6 +10,6 @@ export default class Blockchain {
    * The constructor always creates the first block, that is called by GENESIS.
    */
   constructor() {
-    this.blocks = [new Block(0, 'GENESIS')];
+    this.blocks = [new Block(0, '', 'GENESIS BLOCK')];
   }
 }
