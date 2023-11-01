@@ -27,6 +27,11 @@ export default class Block {
     this.hash = this.getHash();
   }
 
+  /**
+   * Generate the hash, that is the block cryptographic signature.
+   *
+   * @returns the hash
+   */
   getHash(): string {
     return sha256(
       this.index + this.data + this.timestamp + this.previousHash,
@@ -36,21 +41,19 @@ export default class Block {
   /**
    *
    * Tests if this Block is a valid block.
-   * 1) if the index >= 0
-   * 2) if has a hash
-   * 3) if the created date is after 1976/09/16
+   *
    * @returns true if all these rules are valid
    */
-  isValid(): boolean {
-    if (this.index < 0) {
+  isValid(previousHash: string, previousIndex: number): boolean {
+    if (previousIndex !== this.index - 1) {
       return false;
     }
 
-    if (!this.hash) {
+    if (this.hash !== this.getHash()) {
       return false;
     }
 
-    if (!this.previousHash) {
+    if (this.previousHash !== previousHash) {
       return false;
     }
 
