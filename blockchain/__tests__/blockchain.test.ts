@@ -10,35 +10,44 @@ describe('Blockchain tests', () => {
 
   it('Should be valid (Genesis)', () => {
     const blockchain = new Blockchain();
-    expect(blockchain.isValid()).toEqual(true);
+    const validation = blockchain.isValid();
+    // console.log(validation.message);
+    expect(validation.success).toEqual(true);
   });
 
   it('Should be valid (two blocks)', () => {
     const blockchain = new Blockchain();
     blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, 'Bloco 2'));
-    expect(blockchain.isValid()).toEqual(true);
+    const validation = blockchain.isValid();
+    // console.log(validation.message);
+    expect(validation.success).toEqual(true);
   });
 
   it('Should NOT be valid (two blocks)', () => {
     const blockchain = new Blockchain();
     blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, 'Bloco 2'));
-    blockchain.blocks[1].data = 'TRY CHANGE DATA: A TRANSFER 2 TO B';
-    expect(blockchain.isValid()).toEqual(false);
+    blockchain.blocks[1].data =
+      'Manipulating the original data: A TRANSFER 2 TO B';
+    const validation = blockchain.isValid();
+    // console.log(validation.message);
+    expect(validation.success).toEqual(false);
   });
 
   it('Should add block', () => {
     const blockchain = new Blockchain();
-    const addResult = blockchain.addBlock(
+    const validation = blockchain.addBlock(
       new Block(1, blockchain.blocks[0].hash, 'Bloco 2'),
     );
-    expect(addResult).toEqual(true);
+    // console.log(validation.message);
+    expect(validation.success).toEqual(true);
   });
 
   it('Should NOT add block', () => {
     const blockchain = new Blockchain();
-    const addResult = blockchain.addBlock(
+    const validation = blockchain.addBlock(
       new Block(1, 'WRONG PREVIOUS HASH', 'Bloco 2'),
     );
-    expect(addResult).toEqual(false);
+    // console.log(validation.message);
+    expect(validation.success).toEqual(false);
   });
 });

@@ -1,4 +1,5 @@
 import sha256 from 'crypto-js/sha256';
+import Validation from './validation';
 
 /**
  * Block class that represents just one Block in Blockchain
@@ -42,29 +43,32 @@ export default class Block {
    *
    * Tests if this Block is a valid block.
    *
-   * @returns true if all these rules are valid
+   * @returns Validation if all these rules are valid
    */
-  isValid(previousHash: string, previousIndex: number): boolean {
+  isValid(previousHash: string, previousIndex: number): Validation {
     if (previousIndex !== this.index - 1) {
-      return false;
+      return new Validation(false, `Invalid index: ${this.index}`);
     }
 
     if (this.hash !== this.getHash()) {
-      return false;
+      return new Validation(false, `Invalid hash: ${this.getHash()}`);
     }
 
     if (this.previousHash !== previousHash) {
-      return false;
+      return new Validation(
+        false,
+        `Invalid previousHash: ${this.previousHash}`,
+      );
     }
 
     if (!this.data) {
-      return false;
+      return new Validation(false, `Invalid data: EMPTY`);
     }
 
     if (this.timestamp < 1) {
-      return false;
+      return new Validation(false, `Invalid timestamp: ${this.timestamp}`);
     }
 
-    return true;
+    return new Validation();
   }
 }
