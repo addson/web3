@@ -62,4 +62,14 @@ export default class Blockchain {
 
     return new Validation();
   }
+
+  /**
+   * Gets the Block by hash
+   *
+   * @param hash target block to find
+   * @returns the block found
+   */
+  getBlock(hash: string): Block | undefined {
+    return this.blocks.find(b => b.hash === hash);
+  }
 }

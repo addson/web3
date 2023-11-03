@@ -15,6 +15,32 @@ describe('Blockchain tests', () => {
     expect(validation.success).toEqual(true);
   });
 
+  it('Should find a block by hash', () => {
+    const blockchain = new Blockchain();
+    const validation = blockchain.isValid();
+    // console.log(validation.message);
+
+    const block: Block | undefined = blockchain.getBlock(
+      blockchain.blocks[0].hash,
+    );
+    let findBlock: boolean = false;
+    if (block) findBlock = true;
+
+    expect(validation.success && findBlock).toEqual(true);
+  });
+
+  it('Should NOT find a block by hash', () => {
+    const blockchain = new Blockchain();
+    const validation = blockchain.isValid();
+    // console.log(validation.message);
+
+    const block: Block | undefined = blockchain.getBlock('INVALID HASH');
+    let findBlock: boolean = false;
+    if (block) findBlock = true;
+
+    expect(validation.success && findBlock).toEqual(false);
+  });
+
   it('Should be valid (two blocks)', () => {
     const blockchain = new Blockchain();
     blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, 'Bloco 2'));
