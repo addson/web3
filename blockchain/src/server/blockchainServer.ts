@@ -40,6 +40,23 @@ app.get('/blocks/:indexOrHash', (req, res, next) => {
   }
 });
 
+app.post('/blocks/', (req, res, next) => {
+  if (req.body.hash === undefined) {
+    return res
+      .status(422)
+      .json({ error: 'Your request body should bring a hash' });
+  }
+
+  const block = new Block(req.body as Block);
+  const validation = blockchain.addBlock(block);
+
+  if (validation.success) {
+    return res.status(201).json(block);
+  }
+
+  return res.status(400).json({ error: validation });
+});
+
 app.listen(PORT, () => {
   console.log(`Blockchain server is running at PORT ${PORT}`);
 });

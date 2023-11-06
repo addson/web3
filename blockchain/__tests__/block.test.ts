@@ -5,25 +5,50 @@ describe('Block tests', () => {
   let genesis: Block;
 
   beforeAll(() => {
-    genesis = new Block(0, '', 'GENESIS BLOCK');
+    genesis = new Block({
+      data: 'GENESIS BLOCK',
+    } as Block);
   });
 
   it('Should be valid', () => {
-    const block = new Block(1, genesis.hash, 'Bloco 2');
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      data: 'Bloco 2',
+    } as Block);
+
     const valid = block.isValid(genesis.hash, genesis.index);
-    // console.log(valid.message);
+    console.log(valid.message);
     expect(valid.success).toEqual(true);
   });
 
+  it('Should NOT be valid (fallbacks)', () => {
+    const block = new Block();
+
+    const valid = block.isValid(genesis.hash, genesis.index);
+    console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
   it('Should NOT be valid (previous hash)', () => {
-    const block = new Block(1, 'INVALID PREVIOUS HASH', 'Bloco 2');
+    const block = new Block({
+      index: 1,
+      previousHash: 'INVALID PREVIOUS HASH',
+      data: 'Bloco 2',
+    } as Block);
+
     const valid = block.isValid(genesis.hash, genesis.index);
     // console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
 
   it('Should NOT be valid (timestamp)', () => {
-    const block = new Block(1, genesis.hash, 'Bloco 2');
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      data: 'Bloco 2',
+    } as Block);
+
     block.timestamp = -1;
     block.hash = block.getHash(); //updating hash based on new
     const valid = block.isValid(genesis.hash, genesis.index);
@@ -32,7 +57,12 @@ describe('Block tests', () => {
   });
 
   it('Should NOT be valid (hash)', () => {
-    const block = new Block(1, genesis.hash, 'Bloco 2');
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      data: 'Bloco 2',
+    } as Block);
+
     block.hash = '';
     const valid = block.isValid(genesis.hash, genesis.index);
     // console.log(valid.message);
@@ -40,14 +70,24 @@ describe('Block tests', () => {
   });
 
   it('Should NOT be valid (data)', () => {
-    const block = new Block(1, genesis.hash, '');
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      data: '',
+    } as Block);
+
     const valid = block.isValid(genesis.hash, genesis.index);
     // console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
 
   it('Should NOT be valid (index)', () => {
-    const block = new Block(-1, genesis.hash, 'Bloco 2');
+    const block = new Block({
+      index: -1,
+      previousHash: genesis.hash,
+      data: 'Bloco 2',
+    } as Block);
+
     const valid = block.isValid(genesis.hash, genesis.index);
     // console.log(valid.message);
     expect(valid.success).toEqual(false);

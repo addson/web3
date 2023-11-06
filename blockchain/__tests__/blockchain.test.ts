@@ -43,7 +43,13 @@ describe('Blockchain tests', () => {
 
   it('Should be valid (two blocks)', () => {
     const blockchain = new Blockchain();
-    blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, 'Bloco 2'));
+    blockchain.addBlock(
+      new Block({
+        index: 1,
+        previousHash: blockchain.blocks[0].hash,
+        data: 'Bloco 2',
+      } as Block),
+    );
     const validation = blockchain.isValid();
     // console.log(validation.message);
     expect(validation.success).toEqual(true);
@@ -51,7 +57,13 @@ describe('Blockchain tests', () => {
 
   it('Should NOT be valid (two blocks)', () => {
     const blockchain = new Blockchain();
-    blockchain.addBlock(new Block(1, blockchain.blocks[0].hash, 'Bloco 2'));
+    blockchain.addBlock(
+      new Block({
+        index: 1,
+        previousHash: blockchain.blocks[0].hash,
+        data: 'Bloco 2',
+      } as Block),
+    );
     blockchain.blocks[1].data =
       'Manipulating the original data: A TRANSFER 2 TO B';
     const validation = blockchain.isValid();
@@ -62,7 +74,11 @@ describe('Blockchain tests', () => {
   it('Should add block', () => {
     const blockchain = new Blockchain();
     const validation = blockchain.addBlock(
-      new Block(1, blockchain.blocks[0].hash, 'Bloco 2'),
+      new Block({
+        index: 1,
+        previousHash: blockchain.blocks[0].hash,
+        data: 'Bloco 2',
+      } as Block),
     );
     // console.log(validation.message);
     expect(validation.success).toEqual(true);
@@ -71,7 +87,11 @@ describe('Blockchain tests', () => {
   it('Should NOT add block', () => {
     const blockchain = new Blockchain();
     const validation = blockchain.addBlock(
-      new Block(1, 'WRONG PREVIOUS HASH', 'Bloco 2'),
+      new Block({
+        index: 1,
+        previousHash: 'WRONG PREVIOUS HASH',
+        data: 'Bloco 2',
+      } as Block),
     );
     // console.log(validation.message);
     expect(validation.success).toEqual(false);

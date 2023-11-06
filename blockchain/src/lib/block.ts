@@ -12,20 +12,18 @@ export default class Block {
   data: string;
 
   /**
+   * Constructor for a Block.
+   * Initializes a new Block instance with optional properties from a provided Block object.
+   * If no Block is provided, default values are used.
    *
-   * The constructor of one Block
-   * @param index the block index in Blockchain
-   * @param hash the block hash that turn this Block a unique block in Blockchain
-   * @param previousHash the previous block hash that connect this block to the previous block
-   * @param data the block data
-   *
+   * @param block An optional Block object for property initialization.
    */
-  constructor(index: number, previousHash: string, data: string) {
-    this.index = index;
-    this.timestamp = Date.now();
-    this.previousHash = previousHash;
-    this.data = data;
-    this.hash = this.getHash();
+  constructor(block?: Block) {
+    this.index = block?.index || 0;
+    this.timestamp = block?.timestamp || Date.now();
+    this.previousHash = block?.previousHash || '';
+    this.data = block?.data || '';
+    this.hash = block?.hash || this.getHash();
   }
 
   /**

@@ -12,7 +12,13 @@ export default class Blockchain {
    * The constructor always creates the first block, that is called by GENESIS.
    */
   constructor() {
-    this.blocks = [new Block(this.nextIndex, '', 'GENESIS BLOCK')];
+    this.blocks = [
+      new Block({
+        index: this.nextIndex,
+        previousHash: '',
+        data: 'GENESIS BLOCK',
+      } as Block),
+    ];
     this.nextIndex++;
   }
 
@@ -33,7 +39,7 @@ export default class Blockchain {
     if (!validation.success)
       return new Validation(
         false,
-        `Invalid Block: ${block.index} \n${validation.message}`,
+        `Invalid Block: ${block.index} ${validation.message}`,
       );
 
     this.blocks.push(block);
@@ -56,7 +62,7 @@ export default class Blockchain {
       if (!validation.success)
         return new Validation(
           false,
-          `Invalid Block: ${currentBlock.index} \n${validation.message}`,
+          `Invalid Block: ${currentBlock.index} ${validation.message}`,
         );
     }
 
