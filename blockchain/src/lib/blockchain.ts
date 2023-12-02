@@ -1,5 +1,6 @@
 import Block from './block';
 import Validation from './validation';
+import BlockInfo from './blockInfo';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -10,7 +11,11 @@ export default class Blockchain {
 
   // static to running just once globally fo all class isntances
   // readonly means that this fild can not be changed.
+  // Increasing the difficulty every N number blocks.
   static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 5;
+
+  //the miner will have to generates a hash with 62 hashs on the left
+  static readonly MAX_CHALLENGE_FIFFICULTY_FACTOR: number = 62;
 
   /**
    * The constructor always creates the first block, that is called by GENESIS.
@@ -43,7 +48,7 @@ export default class Blockchain {
    *
    * @returns the challenge Difficult golden number that should be resolved by the miners
    */
-  generatesCallengeDifficultGoldenNumber(): number {
+  generatesDifficultChallengeGoldenNumber(): number {
     return Math.ceil(
       //Round up
       this.blocks.length / Blockchain.CHALLENGE_FIFFICULTY_FACTOR,
@@ -62,7 +67,7 @@ export default class Blockchain {
     const validation = block.isValid(
       lastBlock.hash,
       lastBlock.index,
-      this.generatesCallengeDifficultGoldenNumber(),
+      this.generatesDifficultChallengeGoldenNumber(),
     );
 
     if (!validation.success)
@@ -90,7 +95,7 @@ export default class Blockchain {
       const validation = currentBlock.isValid(
         lastBlock.hash,
         lastBlock.index,
-        this.generatesCallengeDifficultGoldenNumber(),
+        this.generatesDifficultChallengeGoldenNumber(),
       );
 
       if (!validation.success)
@@ -111,5 +116,36 @@ export default class Blockchain {
    */
   getBlock(hash: string): Block | undefined {
     return this.blocks.find(b => b.hash === hash);
+  }
+
+  /**
+   * Returns the reward for each transaction made in the mined block.
+   *
+   * @returns fee per each Tx in block
+   */
+  getFeePerTx(): number {
+    return 1;
+  }
+
+  /**
+   * Get all data provided by the blockchain for the next block to be mined.
+   *
+   */
+  getNextBlock(): BlockInfo {
+    const data = new Date().toString();
+    const difficultChallenge = this.generatesDifficultChallengeGoldenNumber();
+    const previousHash = this.getLastBlock().hash;
+    const index = this.blocks.length;
+    const feePerTx = this.getFeePerTx();
+    const maxDifficultChallenge = Blockchain.MAX_CHALLENGE_FIFFICULTY_FACTOR;
+
+    return {
+      data,
+      difficultChallenge,
+      previousHash,
+      index,
+      feePerTx,
+      maxDifficultChallenge,
+    } as BlockInfo;
   }
 }

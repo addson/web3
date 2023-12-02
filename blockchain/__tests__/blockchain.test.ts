@@ -98,4 +98,10 @@ describe('Blockchain tests', () => {
     // console.log(validation.message);
     expect(validation.success).toEqual(false);
   });
+
+  it('Should get the next block info from the blockchain for mining.', () => {
+    const blockchain = new Blockchain();
+    const info = blockchain.getNextBlock();
+    expect(info.index).toEqual(1);
+  });
 });
