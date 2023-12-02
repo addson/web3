@@ -1,8 +1,8 @@
 import Block from './block';
-import Validation from './validation';
+import Validation from '../validation';
 
 /**
- * The blockchain class that represents all chain of blocks
+ * The mocked blockchain class that represents all chain of blocks
  */
 export default class Blockchain {
   blocks: Block[];
@@ -14,9 +14,11 @@ export default class Blockchain {
   constructor() {
     this.blocks = [
       new Block({
-        index: this.nextIndex,
+        index: 0,
+        hash: 'abc',
         previousHash: '',
         data: 'GENESIS BLOCK',
+        timestamp: Date.now(),
       } as Block),
     ];
     this.nextIndex++;
@@ -27,21 +29,23 @@ export default class Blockchain {
   }
 
   /**
-   * Adding new Block to blockchain
+   * Adding new Mocked Block to blockchain
    *
    * @param block
    * @returns if all is ok return true
    */
   addBlock(block: Block): Validation {
-    const lastBlock = this.getLastBlock();
+    if (block.index < 0) return new Validation(false, `Invalid Mock Block`);
 
-    const validation = block.isValid(lastBlock.hash, lastBlock.index);
+    // const lastBlock = this.getLastBlock();
 
-    if (!validation.success)
-      return new Validation(
-        false,
-        `Invalid Block: ${block.index} ${validation.message}`,
-      );
+    // const validation = block.isValid(lastBlock.hash, lastBlock.index);
+
+    // if (!validation.success)
+    //   return new Validation(
+    //     false,
+    //     `Invalid Block: ${block.index} ${validation.message}`,
+    //   );
 
     this.blocks.push(block);
     this.nextIndex++;
@@ -50,23 +54,11 @@ export default class Blockchain {
   }
 
   /**
-   * Validate if all Blockchain is ok.
+   * Mock Blockchain is  always valid
    *
-   * @returns Validation or false
+   * @returns Validation
    */
   isValid(): Validation {
-    for (let i = this.blocks.length - 1; i > 0; i--) {
-      const currentBlock = this.blocks[i];
-      const lastBlock = this.blocks[i - 1];
-
-      const validation = currentBlock.isValid(lastBlock.hash, lastBlock.index);
-      if (!validation.success)
-        return new Validation(
-          false,
-          `Invalid Block: ${currentBlock.index} ${validation.message}`,
-        );
-    }
-
     return new Validation();
   }
 

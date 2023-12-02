@@ -6,8 +6,11 @@ import Block from '../lib/block';
 const PORT: number = 3000;
 const app = express();
 
-app.use(morgan('tiny')); // HTTP requests logger middleware for Node.js
-app.use(express.json()); // to turn all HTTP requests to json
+// HTTP requests logger middleware for Node.js
+if (process.argv.includes('--run')) app.use(morgan('tiny'));
+
+// to turn all HTTP requests to json
+app.use(express.json());
 
 const blockchain = new Blockchain();
 
@@ -57,6 +60,9 @@ app.post('/blocks/', (req, res, next) => {
   return res.status(400).json({ error: validation });
 });
 
-app.listen(PORT, () => {
-  console.log(`Blockchain server is running at PORT ${PORT}`);
-});
+if (process.argv.includes('--run'))
+  app.listen(PORT, () => {
+    console.log(`Blockchain server is running at PORT ${PORT}`);
+  });
+
+export { app };
