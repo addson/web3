@@ -10,6 +10,8 @@ export default class Block {
   hash: string = '';
   previousHash: string;
   data: string;
+  nonce: number; //number used once
+  miner: string; //miner hash that created this block
 
   /**
    * Constructor for a Block.
@@ -23,6 +25,8 @@ export default class Block {
     this.timestamp = block?.timestamp || Date.now();
     this.previousHash = block?.previousHash || '';
     this.data = block?.data || '';
+    this.nonce = block?.nonce || 0;
+    this.miner = block?.miner || '';
     this.hash = block?.hash || this.getHash();
   }
 
@@ -33,23 +37,61 @@ export default class Block {
    */
   getHash(): string {
     return sha256(
-      this.index + this.data + this.timestamp + this.previousHash,
+      this.index +
+        this.data +
+        this.timestamp +
+        this.previousHash +
+        this.nonce +
+        this.miner,
     ).toString();
   }
 
   /**
+   * Attempt to find and generate a new valid hash that
+   * begins with the challenge difficulty's resulting prefix.
+   * This hash uses all the current block data to assign the new current block.
    *
+   * @param challengeDificulty the blockchain current challenge difficult.
+   * @param miner the miner wallet address
+   */
+  mine(challengeDificulty: number, miner: string) {
+    this.miner = miner;
+    const prefix = this.getHashPrefix(challengeDificulty);
+
+    //only ends up when the hash begins with the prefix
+    do {
+      this.nonce++;
+      this.hash = this.getHash();
+    } while (!this.hash.startsWith(prefix));
+  }
+
+  /**
+   * This join all empty elements array passing 0 as separator.
+   * A valid hash depends on the number of leading zeros in the hash.
+   *
+   * @param challengeDificulty
+   * @returns hash prefix
+   */
+  getHashPrefix(challengeDificulty: number): string {
+    const prefix = new Array(challengeDificulty + 1).join('0');
+    return prefix;
+  }
+
+  /**
    * Tests if this Block is a valid block.
    *
+   * @param previousHash the previous hash from previous block.
+   * @param previousIndex the previous index block
+   * @param challengeDificulty the quantity of zeros required to begin the current hash.
    * @returns Validation if all these rules are valid
    */
-  isValid(previousHash: string, previousIndex: number): Validation {
+  isValid(
+    previousHash: string,
+    previousIndex: number,
+    challengeDificulty: number,
+  ): Validation {
     if (previousIndex !== this.index - 1) {
       return new Validation(false, `Invalid index: ${this.index}`);
-    }
-
-    if (this.hash !== this.getHash()) {
-      return new Validation(false, `Invalid hash: ${this.getHash()}`);
     }
 
     if (this.previousHash !== previousHash) {
@@ -65,6 +107,15 @@ export default class Block {
 
     if (this.timestamp < 1) {
       return new Validation(false, `Invalid timestamp: ${this.timestamp}`);
+    }
+
+    if (!this.nonce || !this.miner) {
+      return new Validation(false, `This Block was NOT Mined`);
+    }
+
+    const prefix = this.getHashPrefix(challengeDificulty);
+    if (this.hash !== this.getHash() || !this.hash.startsWith(prefix)) {
+      return new Validation(false, `Invalid hash: ${this.getHash()}`);
     }
 
     return new Validation();

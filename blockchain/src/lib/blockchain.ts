@@ -8,6 +8,10 @@ export default class Blockchain {
   blocks: Block[];
   nextIndex: number = 0;
 
+  // static to running just once globally fo all class isntances
+  // readonly means that this fild can not be changed.
+  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 5;
+
   /**
    * The constructor always creates the first block, that is called by GENESIS.
    */
@@ -22,8 +26,28 @@ export default class Blockchain {
     this.nextIndex++;
   }
 
+  /**
+   * Gets the last block based on the current block.
+   * @returns last block
+   */
   getLastBlock(): Block {
     return this.blocks[this.blocks.length - 1];
+  }
+
+  /**
+   * Generates the challenge Difficult golden number that should be resolved by the miners.
+   *
+   * For every N blocks, my challenge difficulty will adjust.
+   * It could be adjusted too using the quantity pending blocks,
+   * or using the actives miners on the blockchain too...
+   *
+   * @returns the challenge Difficult golden number that should be resolved by the miners
+   */
+  generatesCallengeDifficultGoldenNumber(): number {
+    return Math.ceil(
+      //Round up
+      this.blocks.length / Blockchain.CHALLENGE_FIFFICULTY_FACTOR,
+    );
   }
 
   /**
@@ -35,7 +59,11 @@ export default class Blockchain {
   addBlock(block: Block): Validation {
     const lastBlock = this.getLastBlock();
 
-    const validation = block.isValid(lastBlock.hash, lastBlock.index);
+    const validation = block.isValid(
+      lastBlock.hash,
+      lastBlock.index,
+      this.generatesCallengeDifficultGoldenNumber(),
+    );
 
     if (!validation.success)
       return new Validation(
@@ -59,7 +87,12 @@ export default class Blockchain {
       const currentBlock = this.blocks[i];
       const lastBlock = this.blocks[i - 1];
 
-      const validation = currentBlock.isValid(lastBlock.hash, lastBlock.index);
+      const validation = currentBlock.isValid(
+        lastBlock.hash,
+        lastBlock.index,
+        this.generatesCallengeDifficultGoldenNumber(),
+      );
+
       if (!validation.success)
         return new Validation(
           false,
