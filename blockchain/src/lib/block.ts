@@ -1,5 +1,6 @@
 import sha256 from 'crypto-js/sha256';
 import Validation from './validation';
+import BlockInfo from './blockInfo';
 
 /**
  * Block class that represents just one Block in Blockchain
@@ -51,12 +52,12 @@ export default class Block {
    * begins with the challenge difficulty's resulting prefix.
    * This hash uses all the current block data to assign the new current block.
    *
-   * @param challengeDificulty the blockchain current challenge difficult.
+   * @param difficultChallenge the blockchain current challenge difficult.
    * @param miner the miner wallet address
    */
-  mine(challengeDificulty: number, miner: string) {
+  mine(difficultChallenge: number, miner: string) {
     this.miner = miner;
-    const prefix = this.getHashPrefix(challengeDificulty);
+    const prefix = this.getHashPrefix(difficultChallenge);
 
     //only ends up when the hash begins with the prefix
     do {
@@ -69,11 +70,11 @@ export default class Block {
    * This join all empty elements array passing 0 as separator.
    * A valid hash depends on the number of leading zeros in the hash.
    *
-   * @param challengeDificulty
+   * @param difficultChallenge
    * @returns hash prefix
    */
-  getHashPrefix(challengeDificulty: number): string {
-    const prefix = new Array(challengeDificulty + 1).join('0');
+  getHashPrefix(difficultChallenge: number): string {
+    const prefix = new Array(difficultChallenge + 1).join('0');
     return prefix;
   }
 
@@ -82,13 +83,13 @@ export default class Block {
    *
    * @param previousHash the previous hash from previous block.
    * @param previousIndex the previous index block
-   * @param challengeDificulty the quantity of zeros required to begin the current hash.
+   * @param difficultChallenge the quantity of zeros required to begin the current hash.
    * @returns Validation if all these rules are valid
    */
   isValid(
     previousHash: string,
     previousIndex: number,
-    challengeDificulty: number,
+    difficultChallenge: number,
   ): Validation {
     if (previousIndex !== this.index - 1) {
       return new Validation(false, `Invalid index: ${this.index}`);
@@ -113,11 +114,25 @@ export default class Block {
       return new Validation(false, `This Block was NOT Mined`);
     }
 
-    const prefix = this.getHashPrefix(challengeDificulty);
+    const prefix = this.getHashPrefix(difficultChallenge);
     if (this.hash !== this.getHash() || !this.hash.startsWith(prefix)) {
       return new Validation(false, `Invalid hash: ${this.getHash()}`);
     }
 
     return new Validation();
+  }
+
+  /**
+   * Turn the data BlockInfo to a new Block.
+   *
+   * @param blockInfo from blockInfo
+   * @returns
+   */
+  static blockInfoToBlock(blockInfo: BlockInfo): Block {
+    const block = new Block();
+    block.index = blockInfo.index;
+    block.previousHash = blockInfo.previousHash;
+    block.data = blockInfo.data;
+    return block;
   }
 }

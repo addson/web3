@@ -12,7 +12,7 @@ export default class Blockchain {
   // static to running just once globally fo all class isntances
   // readonly means that this fild can not be changed.
   // Increasing the difficulty every N number blocks.
-  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 5;
+  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 25;
 
   //the miner will have to generates a hash with 62 hashs on the left
   static readonly MAX_CHALLENGE_FIFFICULTY_FACTOR: number = 62;
