@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
@@ -14,7 +14,7 @@ app.use(express.json());
 
 const blockchain = new Blockchain();
 
-app.get('/status', (req, res, next) => {
+app.get('/status', (req: Request, res: Response, next: NextFunction) => {
   res.json({
     numberOfBlocks: blockchain.blocks.length,
     isValid: blockchain.isValid(),
@@ -22,28 +22,35 @@ app.get('/status', (req, res, next) => {
   });
 });
 
-app.get('/blocks/:indexOrHash', (req, res, next) => {
-  let block: Block | undefined;
-
-  // If it's a number, assume it's an index
-  if (/^\d+$/.test(req.params.indexOrHash)) {
-    const index: number = parseInt(req.params.indexOrHash);
-    block = blockchain.blocks[index];
-  }
-  // If it's a string, assume it's a hash
-  else if (/^\w+$/.test(req.params.indexOrHash)) {
-    const hash = req.params.indexOrHash;
-    block = blockchain.getBlock(hash);
-  }
-
-  if (block) {
-    return res.json(block);
-  } else {
-    return res.status(404).json({ error: 'Block not found' });
-  }
+app.get('/blocks/next', (req: Request, res: Response, next: NextFunction) => {
+  res.json(blockchain.getNextBlock());
 });
 
-app.post('/blocks/', (req, res, next) => {
+app.get(
+  '/blocks/:indexOrHash',
+  (req: Request, res: Response, next: NextFunction) => {
+    let block: Block | undefined;
+
+    // If it's a number, assume it's an index
+    if (/^\d+$/.test(req.params.indexOrHash)) {
+      const index: number = parseInt(req.params.indexOrHash);
+      block = blockchain.blocks[index];
+    }
+    // If it's a string, assume it's a hash
+    else if (/^\w+$/.test(req.params.indexOrHash)) {
+      const hash = req.params.indexOrHash;
+      block = blockchain.getBlock(hash);
+    }
+
+    if (block) {
+      return res.json(block);
+    } else {
+      return res.status(404).json({ error: 'Block not found' });
+    }
+  },
+);
+
+app.post('/blocks/', (req: Request, res: Response, next: NextFunction) => {
   if (req.body.hash === undefined) {
     return res
       .status(422)

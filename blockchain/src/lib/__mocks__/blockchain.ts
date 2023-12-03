@@ -1,5 +1,6 @@
 import Block from './block';
 import Validation from '../validation';
+import BlockInfo from '../blockInfo';
 
 /**
  * The mocked blockchain class that represents all chain of blocks
@@ -70,5 +71,36 @@ export default class Blockchain {
    */
   getBlock(hash: string): Block | undefined {
     return this.blocks.find(b => b.hash === hash);
+  }
+
+  /**
+   * Returns the reward for each transaction made in the mined block.
+   *
+   * @returns fee per each Tx in block
+   */
+  getFeePerTx(): number {
+    return 1;
+  }
+
+  /**
+   * Get all data provided by the blockchain for the next block to be mined.
+   *
+   */
+  getNextBlock(): BlockInfo {
+    const data = new Date().toString();
+    const difficultChallenge = 0;
+    const previousHash = this.getLastBlock().hash;
+    const index = this.blocks.length;
+    const feePerTx = this.getFeePerTx();
+    const maxDifficultChallenge = 62;
+
+    return {
+      data,
+      difficultChallenge,
+      previousHash,
+      index,
+      feePerTx,
+      maxDifficultChallenge,
+    } as BlockInfo;
   }
 }
