@@ -1,4 +1,6 @@
 import Validation from '../validation';
+import Transaction from '../transaction';
+import TransactionType from '../transactionType';
 
 /**
  * Mocked Block class that represents just one Block in Blockchain
@@ -8,7 +10,7 @@ export default class Block {
   timestamp: number;
   hash: string = '';
   previousHash: string;
-  data: string;
+  transactions: Transaction[];
 
   /**
    * Constructor for a Moked Block.
@@ -21,8 +23,13 @@ export default class Block {
     this.index = block?.index || 0;
     this.timestamp = block?.timestamp || Date.now();
     this.previousHash = block?.previousHash || '';
-    this.data = block?.data || '';
     this.hash = block?.hash || this.getHash();
+
+    /** This ensures that I have complete Transaction objects,
+     * with not only properties but also functions */
+    this.transactions = block?.transactions
+      ? block?.transactions.map(tx => new Transaction(tx))
+      : ([] as Transaction[]);
   }
 
   /**

@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
 
 describe('Block tests', () => {
   const challengeDifficultExample = 0;
@@ -9,7 +11,12 @@ describe('Block tests', () => {
 
   beforeAll(() => {
     genesis = new Block({
-      data: 'GENESIS BLOCK',
+      transactions: [
+        new Transaction({
+          type: TransactionType.FEE,
+          data: 'GENESIS BLOCK',
+        } as Transaction),
+      ],
     } as Block);
   });
 
@@ -17,7 +24,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -40,7 +52,12 @@ describe('Block tests', () => {
       difficultChallenge: challengeDifficultExample,
       maxDifficultChallenge: 62,
       feePerTx: 1,
-      data: 'Block 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as BlockInfo);
 
     //so that this block is valid we have to mine
@@ -77,7 +94,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: 'INVALID PREVIOUS HASH',
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -98,7 +120,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -117,11 +144,41 @@ describe('Block tests', () => {
     expect(valid.success).toEqual(false);
   });
 
-  it('Should NOT be valid (data)', () => {
+  it('Should NOT be valid (transactions are empty)', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      data: '',
+      transactions: [] as Array<Transaction>,
+    } as Block);
+
+    //so that this block is valid we have to mine
+    //a new hash that attends all requirements...
+    //It's not due to the absence of mining that the block's hash is invalid.
+    block.mine(challengeDifficultExample, minerWalletExample);
+
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be valid (more then one transaction with TransactionType.FEE)', () => {
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      transactions: [
+        new Transaction({
+          type: TransactionType.FEE,
+          data: 'Bloco 1',
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -142,7 +199,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: -1,
       previousHash: genesis.hash,
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -163,7 +225,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     block.hash = '';
@@ -180,7 +247,12 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      data: 'Bloco 2',
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          data: 'Bloco 2',
+        } as Transaction),
+      ],
     } as Block);
 
     //so that this block is valid we have to mine
@@ -189,6 +261,74 @@ describe('Block tests', () => {
     block.mine(challengeDifficultExample, minerWalletExample);
 
     block.hash = 'hash has been tampered with...';
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be valid Block (as there is more then one FEE transactions)', () => {
+    const validTx1 = new Transaction({
+      type: TransactionType.FEE,
+      data: 'TX type Fee',
+    } as Transaction);
+
+    const invalidTx3 = new Transaction({
+      type: TransactionType.FEE,
+      data: 'TX type Fee',
+    } as Transaction);
+
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      transactions: [validTx1, invalidTx3],
+    } as Block);
+
+    //so that this block is valid we have to mine
+    //a new hash that attends all requirements...
+    block.mine(challengeDifficultExample, minerWalletExample);
+
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be valid Block (as there is at least one Invalid Transaction)', () => {
+    const validTx1 = new Transaction({
+      type: TransactionType.FEE,
+      data: 'TX type Fee',
+    } as Transaction);
+
+    const invalidTx3 = new Transaction({
+      type: TransactionType.REGULAR,
+      data: '', //wrong empty data
+    } as Transaction);
+
+    const invalidTx4 = new Transaction({
+      type: TransactionType.REGULAR,
+      data: 'TX type Regular',
+    } as Transaction);
+
+    //invalidating the hash
+    invalidTx4.hash = 'INVALIDATING HASH';
+
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      transactions: [validTx1, invalidTx3, invalidTx4],
+    } as Block);
+
+    //so that this block is valid we have to mine
+    //a new hash that attends all requirements...
+    block.mine(challengeDifficultExample, minerWalletExample);
+
     const valid = block.isValid(
       genesis.hash,
       genesis.index,

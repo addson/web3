@@ -1,6 +1,8 @@
 import Block from './block';
 import Validation from '../validation';
 import BlockInfo from '../blockInfo';
+import Transaction from '../transaction';
+import TransactionType from '../transactionType';
 
 /**
  * The mocked blockchain class that represents all chain of blocks
@@ -18,7 +20,12 @@ export default class Blockchain {
         index: 0,
         hash: 'abc',
         previousHash: '',
-        data: 'GENESIS BLOCK',
+        transactions: [
+          new Transaction({
+            type: TransactionType.FEE,
+            data: 'GENESIS BLOCK',
+          } as Transaction),
+        ],
         timestamp: Date.now(),
       } as Block),
     ];
@@ -37,16 +44,6 @@ export default class Blockchain {
    */
   addBlock(block: Block): Validation {
     if (block.index < 0) return new Validation(false, `Invalid Mock Block`);
-
-    // const lastBlock = this.getLastBlock();
-
-    // const validation = block.isValid(lastBlock.hash, lastBlock.index);
-
-    // if (!validation.success)
-    //   return new Validation(
-    //     false,
-    //     `Invalid Block: ${block.index} ${validation.message}`,
-    //   );
 
     this.blocks.push(block);
     this.nextIndex++;
@@ -87,7 +84,13 @@ export default class Blockchain {
    *
    */
   getNextBlock(): BlockInfo {
-    const data = new Date().toString();
+    const transactions = [
+      //todo not done yet...
+      new Transaction({
+        type: TransactionType.REGULAR,
+        data: new Date().toString(),
+      } as Transaction),
+    ];
     const difficultChallenge = 0;
     const previousHash = this.getLastBlock().hash;
     const index = this.blocks.length;
@@ -95,7 +98,7 @@ export default class Blockchain {
     const maxDifficultChallenge = 62;
 
     return {
-      data,
+      transactions,
       difficultChallenge,
       previousHash,
       index,

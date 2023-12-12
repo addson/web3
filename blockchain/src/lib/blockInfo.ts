@@ -1,3 +1,5 @@
+import Transaction from './transaction';
+
 /**
  * All data provided by the blockchain for the next block to be mined.
  */
@@ -7,5 +9,5 @@ export default interface BlockInfo {
   difficultChallenge: number; //Difficulty challenge available for miners offered by the blockchain.
   maxDifficultChallenge: number; //Maximum limit where there will be no more rewards.
   feePerTx: number; //Transaction fee that the miner will record in the block."
-  data: string; //Data that should be written in the new block to be mined.
+  transactions: Transaction[]; //Transactions array that should be written in the new block to be mined.
 }

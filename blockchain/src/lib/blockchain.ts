@@ -1,6 +1,8 @@
 import Block from './block';
 import Validation from './validation';
 import BlockInfo from './blockInfo';
+import Transaction from './transaction';
+import TransactionType from './transactionType';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -25,7 +27,12 @@ export default class Blockchain {
       new Block({
         index: this.nextIndex,
         previousHash: '',
-        data: 'GENESIS BLOCK',
+        transactions: [
+          new Transaction({
+            type: TransactionType.FEE,
+            data: 'GENESIS BLOCK',
+          } as Transaction),
+        ],
       } as Block),
     ];
     this.nextIndex++;
@@ -132,7 +139,13 @@ export default class Blockchain {
    *
    */
   getNextBlock(): BlockInfo {
-    const data = new Date().toString();
+    const transactions = [
+      //todo not done yet...
+      new Transaction({
+        type: TransactionType.REGULAR,
+        data: new Date().toString(),
+      } as Transaction),
+    ];
     const difficultChallenge = this.generatesDifficultChallengeGoldenNumber();
     const previousHash = this.getLastBlock().hash;
     const index = this.blocks.length;
@@ -140,7 +153,7 @@ export default class Blockchain {
     const maxDifficultChallenge = Blockchain.MAX_CHALLENGE_FIFFICULTY_FACTOR;
 
     return {
-      data,
+      transactions,
       difficultChallenge,
       previousHash,
       index,

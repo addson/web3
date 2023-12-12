@@ -1,6 +1,8 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import Blockchain from '../src/lib/blockchain';
 import Block from '../src/lib/block';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
 
 //mocking the block class
 jest.mock('../src/lib/block');
@@ -50,7 +52,12 @@ describe('Blockchain tests', () => {
       new Block({
         index: 1,
         previousHash: blockchain.blocks[0].hash,
-        data: 'Bloco 2',
+        transactions: [
+          new Transaction({
+            type: TransactionType.REGULAR,
+            data: 'Bloco 2',
+          } as Transaction),
+        ],
       } as Block),
     );
     const validation = blockchain.isValid();
@@ -64,7 +71,12 @@ describe('Blockchain tests', () => {
       new Block({
         index: 1,
         previousHash: blockchain.blocks[0].hash,
-        data: 'Bloco 2',
+        transactions: [
+          new Transaction({
+            type: TransactionType.REGULAR,
+            data: 'Bloco 2',
+          } as Transaction),
+        ],
       } as Block),
     );
     blockchain.blocks[1].index = -1;
@@ -79,7 +91,12 @@ describe('Blockchain tests', () => {
       new Block({
         index: 1,
         previousHash: blockchain.blocks[0].hash,
-        data: 'Bloco 2',
+        transactions: [
+          new Transaction({
+            type: TransactionType.REGULAR,
+            data: 'Bloco 2',
+          } as Transaction),
+        ],
       } as Block),
     );
     // console.log(validation.message);
@@ -92,7 +109,12 @@ describe('Blockchain tests', () => {
       new Block({
         index: 1,
         previousHash: 'WRONG PREVIOUS HASH',
-        data: 'Bloco 2',
+        transactions: [
+          new Transaction({
+            type: TransactionType.REGULAR,
+            data: 'Bloco 2',
+          } as Transaction),
+        ],
       } as Block),
     );
     // console.log(validation.message);

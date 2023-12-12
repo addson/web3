@@ -1,6 +1,8 @@
 import sha256 from 'crypto-js/sha256';
 import Validation from './validation';
 import BlockInfo from './blockInfo';
+import Transaction from './transaction';
+import TransactionType from './transactionType';
 
 /**
  * Block class that represents just one Block in Blockchain
@@ -10,7 +12,7 @@ export default class Block {
   timestamp: number;
   hash: string = '';
   previousHash: string;
-  data: string;
+  transactions: Transaction[];
   nonce: number; //number used once
   miner: string; //miner hash that created this block
 
@@ -25,21 +27,41 @@ export default class Block {
     this.index = block?.index || 0;
     this.timestamp = block?.timestamp || Date.now();
     this.previousHash = block?.previousHash || '';
-    this.data = block?.data || '';
     this.nonce = block?.nonce || 0;
     this.miner = block?.miner || '';
     this.hash = block?.hash || this.getHash();
+
+    /** This ensures that I have complete Transaction objects,
+     * with not only properties but also functions */
+    this.transactions = block?.transactions
+      ? block.transactions.map(tx => new Transaction(tx))
+      : ([] as Transaction[]);
   }
 
   /**
    * Generate the hash, that is the block cryptographic signature.
+   * Concatenating all the hashes of each transaction in the array of transactions.
+   * All transactions within this block are part of the block's signature.
+   * Therefore, if any transaction is altered, this hash will be changed.
+   * This ensures the cryptographic security of the block,
+   * based on the entire content (of all transactions) within the block.
    *
    * @returns the hash
    */
   getHash(): string {
+    /**
+     * Concatenating all hashes.
+     */
+    const txs =
+      this.transactions && this.transactions.length
+        ? this.transactions
+            .map(tx => tx.hash)
+            .reduce((beforeHash, afterHash) => beforeHash + afterHash)
+        : '';
+
     return sha256(
       this.index +
-        this.data +
+        txs +
         this.timestamp +
         this.previousHash +
         this.nonce +
@@ -91,6 +113,40 @@ export default class Block {
     previousIndex: number,
     difficultChallenge: number,
   ): Validation {
+    /** Not Allow empty transactions */
+    if (!this.transactions || this.transactions.length === 0) {
+      return new Validation(false, 'Invalid Block as transactions are empty.');
+    }
+
+    if (this.transactions && this.transactions.length) {
+      /** Allow just one transaction of type fee. */
+      if (
+        this.transactions.filter(tx => tx.type === TransactionType.FEE).length >
+        1
+      ) {
+        return new Validation(
+          false,
+          'Invalid Block as there is more then one transaction type FEE in only one Block.',
+        );
+      }
+
+      /** Not allowed any invalid transaction in the block*/
+      if (this.transactions.filter(tx => !tx.isValid().success).length > 0) {
+        const messageErrors = this.transactions
+          .map(tx => tx.isValid())
+          .filter(v => !v.success)
+          .map(v => v.message);
+        return new Validation(
+          false,
+          'Invalid Block as not allowed any invalid transaction in the block: ' +
+            messageErrors.reduce(
+              (messageBefore, messageAfter) =>
+                messageBefore + ' - ' + messageAfter,
+            ),
+        );
+      }
+    }
+
     if (previousIndex !== this.index - 1) {
       return new Validation(false, `Invalid index: ${this.index}`);
     }
@@ -100,10 +156,6 @@ export default class Block {
         false,
         `Invalid previousHash: ${this.previousHash}`,
       );
-    }
-
-    if (!this.data) {
-      return new Validation(false, `Invalid data: EMPTY`);
     }
 
     if (this.timestamp < 1) {
@@ -132,7 +184,7 @@ export default class Block {
     const block = new Block();
     block.index = blockInfo.index;
     block.previousHash = blockInfo.previousHash;
-    block.data = blockInfo.data;
+    block.transactions = blockInfo.transactions;
     return block;
   }
 }
