@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import Block from '../src/lib/block';
+import BlockInfo from '../src/lib/blockInfo';
 
 describe('Block tests', () => {
   const challengeDifficultExample = 0;
@@ -18,6 +19,29 @@ describe('Block tests', () => {
       previousHash: genesis.hash,
       data: 'Bloco 2',
     } as Block);
+
+    //so that this block is valid we have to mine
+    //a new hash that attends all requirements...
+    block.mine(challengeDifficultExample, minerWalletExample);
+
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(true);
+  });
+
+  it('Should create a block from a BlockInfo', () => {
+    const block = Block.blockInfoToBlock({
+      index: 1,
+      previousHash: genesis.hash,
+      difficultChallenge: challengeDifficultExample,
+      maxDifficultChallenge: 62,
+      feePerTx: 1,
+      data: 'Block 2',
+    } as BlockInfo);
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...

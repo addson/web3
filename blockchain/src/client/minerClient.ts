@@ -1,15 +1,20 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import axios from 'axios';
 import BlockInfo from '../lib/blockInfo';
 import Block from '../lib/block';
 
-const BLOCKCHAIN_SERVER = 'http://localhost:3000';
+const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SEVER;
 
 let totalMined = 0;
 
 const minerWallet = {
   privateKey: 'addson.pri',
-  publickKey: 'addson.pub',
+  publickKey: `$process.env.MINER_WALLET`,
 };
+
+console.log('>> Logged as ' + minerWallet.publickKey);
 
 async function mine() {
   console.log('>> Getting Next Block Info...');

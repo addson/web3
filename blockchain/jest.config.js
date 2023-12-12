@@ -8,4 +8,6 @@ module.exports = {
     '<rootDir>/src/lib/**/*.ts',
     '<rootDir>/src/server/**/*.ts',
   ],
+
+  setupFiles: ['dotenv/config'],
 };

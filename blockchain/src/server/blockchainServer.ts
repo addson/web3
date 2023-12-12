@@ -1,12 +1,16 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
 
-const PORT: number = 3000;
+const PORT: number = parseInt(`$process.env.BLOCKCHAIN_PORT`) || 3000;
 const app = express();
 
 // HTTP requests logger middleware for Node.js
+/* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
 if (process.argv.includes('--run')) app.use(morgan('tiny'));
 
 // to turn all HTTP requests to json
@@ -67,9 +71,10 @@ app.post('/blocks/', (req: Request, res: Response, next: NextFunction) => {
   return res.status(400).json({ error: validation });
 });
 
+/* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
 if (process.argv.includes('--run'))
-  app.listen(PORT, () => {
-    console.log(`Blockchain server is running at PORT ${PORT}`);
-  });
+  app.listen(PORT, () =>
+    console.log(`Blockchain server is running at PORT ${PORT}`),
+  );
 
 export { app };
