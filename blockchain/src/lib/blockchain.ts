@@ -8,7 +8,12 @@ import TransactionType from './transactionType';
  * The blockchain class that represents all chain of blocks
  */
 export default class Blockchain {
+  // Candidate transactions to enter the next blocks.
+  transactionsMemPool: Transaction[];
+
+  //Blockchain blocks list
   blocks: Block[];
+
   nextIndex: number = 0;
 
   // static to running just once globally fo all class isntances
@@ -19,10 +24,14 @@ export default class Blockchain {
   //the miner will have to generates a hash with 62 hashs on the left
   static readonly MAX_CHALLENGE_FIFFICULTY_FACTOR: number = 62;
 
+  //the max quantity of transactions per block
+  static readonly TX_MAX_PER_BLOCK: number = 2;
+
   /**
    * The constructor always creates the first block, that is called by GENESIS.
    */
   constructor() {
+    this.transactionsMemPool = [];
     this.blocks = [
       new Block({
         index: this.nextIndex,
@@ -63,6 +72,61 @@ export default class Blockchain {
   }
 
   /**
+   * Add transactions list on transactionsMemPool. It will be validated before...
+   *
+   * @param transactions transactions list to be added on transactionsMemPool
+   * @returns
+   */
+  addTransactions(transactions: Transaction[]): Validation {
+    if (!transactions || transactions.length === 0) {
+      return new Validation(
+        false,
+        'These txs are empty, so could not be added.',
+      );
+    }
+
+    if (
+      this.transactionsMemPool.some(txMemPool =>
+        transactions.map(tx => tx.hash).includes(txMemPool.hash),
+      )
+    ) {
+      return new Validation(
+        false,
+        'Duplicated tx in transactionsMemPool, so could not be added.',
+      );
+    }
+
+    if (
+      this.blocks.some(b =>
+        b.transactions.some(txBlock =>
+          transactions.map(tx => tx.hash).includes(txBlock.hash),
+        ),
+      )
+    ) {
+      return new Validation(
+        false,
+        'Duplicated tx in blockchain, so could not be added.',
+      );
+    }
+
+    const validations = transactions.map(tx => tx.isValid());
+    if (validations.filter(val => !val.success).length > 0) {
+      return new Validation(
+        false,
+        'At least one of these txs is invalid, so could not be added.',
+      );
+    }
+
+    //if theses transactions are valid, so we add all these on the transactionsMemPool
+    this.transactionsMemPool.push(...transactions);
+
+    return new Validation(
+      true,
+      `Transactions added to transactionsMemPool: ${transactions.toString()}`,
+    );
+  }
+
+  /**
    * Adding new Block to blockchain
    *
    * @param block
@@ -83,10 +147,33 @@ export default class Blockchain {
         `Invalid Block: ${block.index} ${validation.message}`,
       );
 
+    //updating transactionsMemPool removing regular
+    //transactions that are been entering on current block
+    const blockTransactionsHashs = block.transactions
+      .filter(tx => tx.type === TransactionType.FEE)
+      .map(tx => tx.hash);
+    const newTransactionsMemPool = this.transactionsMemPool.filter(
+      tx => !blockTransactionsHashs.includes(tx.hash),
+    );
+
+    //Validating if newTransactionsMemPool were there
+    //on the original this.transactionsMemPool
+    if (
+      newTransactionsMemPool.length + blockTransactionsHashs.length !==
+      this.transactionsMemPool.length
+    ) {
+      return new Validation(
+        false,
+        `Invalid Block: ${block.index}: At least one invalid tx should not be on the original transactionsMemPool`,
+      );
+    }
+    //if the last validate is ok, so we update the transactionsMemPool
+    this.transactionsMemPool = newTransactionsMemPool;
+
     this.blocks.push(block);
     this.nextIndex++;
 
-    return new Validation();
+    return new Validation(true, block.hash);
   }
 
   /**
@@ -128,6 +215,9 @@ export default class Blockchain {
   /**
    * Returns the reward for each transaction made in the mined block.
    *
+   * @todo implements a logic that fees are higher when
+   * the transactions in the mempool are greater...
+   *
    * @returns fee per each Tx in block
    */
   getFeePerTx(): number {
@@ -138,14 +228,18 @@ export default class Blockchain {
    * Get all data provided by the blockchain for the next block to be mined.
    *
    */
-  getNextBlock(): BlockInfo {
-    const transactions = [
-      //todo not done yet...
-      new Transaction({
-        type: TransactionType.REGULAR,
-        data: new Date().toString(),
-      } as Transaction),
-    ];
+  getNextBlock(): BlockInfo | null {
+    //this avoid miners minning transacions empty blocks
+    if (!this.transactionsMemPool || this.transactionsMemPool.length === 0) {
+      return null;
+    }
+
+    /** @todo creates a sort criteria to transactionsMemPool to be used here*/
+    //getting the next transactions from the current transactionsMemPool
+    const transactions = this.transactionsMemPool.slice(
+      0,
+      Blockchain.TX_MAX_PER_BLOCK,
+    );
     const difficultChallenge = this.generatesDifficultChallengeGoldenNumber();
     const previousHash = this.getLastBlock().hash;
     const index = this.blocks.length;

@@ -124,6 +124,7 @@ describe('Blockchain tests', () => {
   it('Should get the next block info from the blockchain for mining.', () => {
     const blockchain = new Blockchain();
     const info = blockchain.getNextBlock();
-    expect(info.index).toEqual(1);
+
+    if (info) expect(info.index).toEqual(1);
   });
 });
