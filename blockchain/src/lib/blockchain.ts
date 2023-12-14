@@ -3,6 +3,7 @@ import Validation from './validation';
 import BlockInfo from './blockInfo';
 import Transaction from './transaction';
 import TransactionType from './transactionType';
+import TransactionSearch from './transactionSearch';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -210,6 +211,38 @@ export default class Blockchain {
    */
   getBlock(hash: string): Block | undefined {
     return this.blocks.find(b => b.hash === hash);
+  }
+
+  /**
+   * Gets the Transaction by hash
+   *
+   * @param hash target transaction to find
+   * @returns the transaction found
+   */
+  getTransaction(hash: string): TransactionSearch | undefined {
+    const memPoolIndex = this.transactionsMemPool.findIndex(
+      tx => tx.hash === hash,
+    );
+    if (memPoolIndex !== -1) {
+      return {
+        transaction: this.transactionsMemPool[memPoolIndex],
+        memPoolIndex,
+      } as TransactionSearch;
+    }
+
+    const blockIndex = this.blocks.findIndex(b =>
+      b.transactions.some(tx => tx.hash === hash),
+    );
+    if (blockIndex !== -1) {
+      return {
+        transaction: this.blocks[blockIndex].transactions.find(
+          tx => tx.hash === hash,
+        ),
+        blockIndex,
+      } as TransactionSearch;
+    }
+
+    return { blockIndex: -1, memPoolIndex: -1 } as TransactionSearch;
   }
 
   /**

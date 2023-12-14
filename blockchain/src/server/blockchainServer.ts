@@ -5,6 +5,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
+import Transaction from '../lib/transaction';
 
 const PORT: number = parseInt(`$process.env.BLOCKCHAIN_PORT`) || 3000;
 const app = express();
@@ -70,6 +71,65 @@ app.post('/blocks/', (req: Request, res: Response, next: NextFunction) => {
 
   return res.status(400).json({ error: validation });
 });
+
+app.get(
+  '/transactions/:hash?',
+  (req: Request, res: Response, next: NextFunction) => {
+    if (req.params.hash) {
+      return res.json(blockchain.getTransaction(req.params.hash));
+    }
+
+    if (
+      blockchain.transactionsMemPool &&
+      blockchain.transactionsMemPool.length > 0
+    ) {
+      return res.json({
+        total_transactions_mempool: blockchain.transactionsMemPool.length,
+        transactions_next_block: blockchain.transactionsMemPool.slice(
+          0,
+          Blockchain.TX_MAX_PER_BLOCK,
+        ),
+      });
+    }
+
+    return res.json('Transactions Mempool is empty!');
+  },
+);
+
+app.post(
+  '/transactions/',
+  (req: Request, res: Response, next: NextFunction) => {
+    const transactionsData: any[] = req.body;
+
+    if (!Array.isArray(transactionsData) || transactionsData.length === 0) {
+      return res.status(422).json({
+        error: 'Your request body should be a non-empty array of transactions',
+      });
+    }
+
+    //this ensures that the functions of Transaction object are loaded too
+    const transactions: Transaction[] = transactionsData.map(
+      item => new Transaction(item as Transaction),
+    );
+
+    const invalidTransaction = transactions.find(
+      tx => tx.hash === undefined || tx.data === undefined,
+    );
+    if (invalidTransaction) {
+      return res.status(422).json({
+        error: 'Each transaction should have both hash and data fields',
+      });
+    }
+
+    const validation = blockchain.addTransactions(transactions);
+
+    if (validation.success) {
+      return res.status(201).json(transactions);
+    }
+
+    return res.status(400).json({ error: validation });
+  },
+);
 
 /* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
 if (process.argv.includes('--run'))
