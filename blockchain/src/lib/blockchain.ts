@@ -20,10 +20,10 @@ export default class Blockchain {
   // static to running just once globally fo all class instances
   // readonly means that this fild can not be changed.
   // Increasing the difficulty every N number blocks.
-  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 3;
+  static readonly CHALLENGE_DIFFICULTY_FACTOR: number = 10;
 
   //the miner will have to generates a hash with 62 hashs on the left
-  static readonly MAX_CHALLENGE_FIFFICULTY_FACTOR: number = 62;
+  static readonly MAX_CHALLENGE_DIFFICULTY_FACTOR: number = 62;
 
   //the max quantity of transactions per block
   static readonly TX_MAX_PER_BLOCK: number = 2;
@@ -65,11 +65,15 @@ export default class Blockchain {
    *
    * @returns the challenge Difficult golden number that should be resolved by the miners
    */
-  generatesDifficultChallengeGoldenNumber(): number {
+  generatesDifficultChallengeGoldenNumber(actualBlocksLength?: number): number {
+    // Calculate the blockchain length when generating the Difficulty Challenge Golden Number.
+    // When validating retroactively, use 'actualBlocksLength'. If not provided, use the current size of the blockchain.
+    const blockchainLength = actualBlocksLength
+      ? actualBlocksLength
+      : this.blocks.length;
+
     //Round up
-    return Math.ceil(
-      this.blocks.length / Blockchain.CHALLENGE_FIFFICULTY_FACTOR,
-    );
+    return Math.ceil(blockchainLength / Blockchain.CHALLENGE_DIFFICULTY_FACTOR);
   }
 
   /**
@@ -132,10 +136,13 @@ export default class Blockchain {
       const currentBlock = this.blocks[i];
       const lastBlock = this.blocks[i - 1];
 
+      // this line: this.generatesDifficultChallengeGoldenNumber(currentBlock.index) is used to
+      // Calculate the blockchain length when generating the Difficulty Challenge Golden Number.
+      // When validating retroactively, use 'actualBlocksLength'. If not provided, use the current size of the blockchain.
       const validation = currentBlock.isValid(
         lastBlock.hash,
         lastBlock.index,
-        this.generatesDifficultChallengeGoldenNumber(),
+        this.generatesDifficultChallengeGoldenNumber(currentBlock.index),
       );
 
       if (!validation.success)
@@ -222,7 +229,7 @@ export default class Blockchain {
     const previousHash = this.getLastBlock().hash;
     const index = this.blocks.length;
     const feePerTx = this.getFeePerTx();
-    const maxDifficultChallenge = Blockchain.MAX_CHALLENGE_FIFFICULTY_FACTOR;
+    const maxDifficultChallenge = Blockchain.MAX_CHALLENGE_DIFFICULTY_FACTOR;
 
     return {
       transactions,

@@ -37,7 +37,6 @@ async function mine() {
     '>> Difficult Challenge (number of 0s starting the block hash): ' +
       blockInfo.difficultChallenge,
   );
-  // newBlock.mine(blockInfo.difficultChallenge, minerWallet.publicKey);
 
   //How long does it take to mine?
   const start = performance.now();
@@ -61,9 +60,9 @@ async function mine() {
     console.error(error.response ? error.response.data : error.message);
   }
 
-  // setTimeout(() => {
-  //   mine();
-  // }, 1000);
+  setTimeout(() => {
+    mine();
+  }, 3000);
 
   console.log();
 }
