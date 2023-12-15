@@ -3,11 +3,13 @@ import Validation from '../validation';
 import BlockInfo from '../blockInfo';
 import Transaction from '../transaction';
 import TransactionType from '../transactionType';
+import TransactionSearch from '../transactionSearch';
 
 /**
  * The mocked blockchain class that represents all chain of blocks
  */
 export default class Blockchain {
+  transactionsMemPool: Transaction[];
   blocks: Block[];
   nextIndex: number = 0;
 
@@ -15,6 +17,7 @@ export default class Blockchain {
    * The constructor always creates the first block, that is called by GENESIS.
    */
   constructor() {
+    this.transactionsMemPool = [];
     this.blocks = [
       new Block({
         index: 0,
@@ -105,5 +108,61 @@ export default class Blockchain {
       feePerTx,
       maxDifficultChallenge,
     } as BlockInfo;
+  }
+
+  addTransactions(transactions: Transaction[]): Validation {
+    if (!transactions || transactions.length === 0) {
+      return new Validation(
+        false,
+        'These txs are empty, so could not be added.',
+      );
+    }
+
+    const validations = transactions.map(tx => tx.isValid());
+    if (validations.filter(val => !val.success).length > 0) {
+      return new Validation(
+        false,
+        'At least one of these txs is invalid, so could not be added.',
+      );
+    }
+
+    //if theses transactions are valid, so we add all these on the transactionsMemPool
+    this.transactionsMemPool.push(...transactions);
+
+    return new Validation(
+      true,
+      `Transactions added to transactionsMemPool: ${transactions.reduce(
+        (txString, transaction) => {
+          return txString + ' - ' + transaction.hash;
+        },
+        '',
+      )}`,
+    );
+  }
+
+  getTransaction(hash: string): TransactionSearch | undefined {
+    const memPoolIndex = this.transactionsMemPool.findIndex(
+      tx => tx.hash === hash,
+    );
+    if (memPoolIndex !== -1) {
+      return {
+        transaction: this.transactionsMemPool[memPoolIndex],
+        memPoolIndex,
+      } as TransactionSearch;
+    }
+
+    const blockIndex = this.blocks.findIndex(b =>
+      b.transactions.some(tx => tx.hash === hash),
+    );
+    if (blockIndex !== -1) {
+      return {
+        transaction: this.blocks[blockIndex].transactions.find(
+          tx => tx.hash === hash,
+        ),
+        blockIndex,
+      } as TransactionSearch;
+    }
+
+    return { blockIndex: -1, memPoolIndex: -1 } as TransactionSearch;
   }
 }

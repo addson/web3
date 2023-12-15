@@ -2,6 +2,8 @@ import request from 'supertest';
 import { describe, test, expect, jest } from '@jest/globals';
 import { app } from '../src/server/blockchainServer';
 import Block from '../src/lib/block';
+import Transaction from '../src/lib/transaction';
+import TransactionType from '../src/lib/transactionType';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
@@ -56,5 +58,126 @@ describe('BlockchainServer Tests', () => {
     } as Block);
     const response = await request(app).post('/blocks/').send(block);
     expect(response.status).toEqual(400);
+  });
+
+  test('GET /transactions - Should NOT get any next transactions as transactionsMemPool is empty.', async () => {
+    //ask for a transaction that was not added before
+    const response = await request(app).get('/transactions/');
+    // console.log(response);
+    expect(response.status).toEqual(400);
+  });
+
+  test('POST /transactions - Should NOT add empty transactions', async () => {
+    const response = await request(app).post('/transactions/').send([]);
+    expect(response.status).toEqual(422);
+  });
+
+  test('POST /transactions - Should NOT add transactions with hash or data empty', async () => {
+    const transaction = new Transaction({
+      type: TransactionType.REGULAR,
+      timestamp: Date.now(),
+      data: '',
+    } as Transaction);
+
+    const response = await request(app)
+      .post('/transactions/')
+      .send([transaction]);
+    expect(response.status).toEqual(422);
+  });
+
+  test('POST /transactions - Should NOT add transactions as any transaction is invalid.', async () => {
+    const tx1 = new Transaction({
+      hash: '',
+      data: 'TX1',
+    } as Transaction);
+
+    const tx2 = new Transaction({
+      hash: '',
+      data: 'TX2',
+    } as Transaction);
+
+    tx2.hash = 'INVALIDATING_THE_HASH';
+
+    const transactions = new Array() as Transaction[];
+    transactions.push(tx1);
+    transactions.push(tx2);
+
+    const response = await request(app)
+      .post('/transactions/')
+      .send(transactions);
+
+    // console.log(response.status);
+    expect(response.status).toEqual(400);
+  });
+
+  test('POST /transactions - Should successfully add transactions.', async () => {
+    const tx1 = new Transaction({
+      hash: '',
+      data: 'TX1',
+    } as Transaction);
+
+    const tx2 = new Transaction({
+      hash: '',
+      data: 'TX2',
+    } as Transaction);
+
+    const transactions = new Array() as Transaction[];
+    transactions.push(tx1);
+    transactions.push(tx2);
+
+    const response = await request(app)
+      .post('/transactions/')
+      .send(transactions);
+
+    // console.log(response.status);
+    expect(response.status).toEqual(201);
+  });
+
+  test('GET /transactions - Should retrieve a specific transaction on the blockchain.', async () => {
+    const tx1 = new Transaction({
+      hash: '',
+      data: 'TX1',
+    } as Transaction);
+
+    const tx2 = new Transaction({
+      hash: '',
+      data: 'TX2',
+    } as Transaction);
+
+    const transactions = new Array() as Transaction[];
+    transactions.push(tx1);
+    transactions.push(tx2);
+
+    const response1 = await request(app)
+      .post('/transactions/')
+      .send(transactions);
+
+    const response2 = await request(app).get(`/transactions/${tx2.hash}`);
+    expect(response2.status).toEqual(200);
+    // console.log(response2.status);
+  });
+
+  test('GET /transactions - Should get all next transactions on the blockchain.', async () => {
+    const tx1 = new Transaction({
+      hash: '',
+      data: 'TX1',
+    } as Transaction);
+
+    const tx2 = new Transaction({
+      hash: '',
+      data: 'TX2',
+    } as Transaction);
+
+    const transactions = new Array() as Transaction[];
+    transactions.push(tx1);
+    transactions.push(tx2);
+
+    const response1 = await request(app)
+      .post('/transactions/')
+      .send(transactions);
+
+    const response2 = await request(app).get(`/transactions/`);
+    expect(response2.status).toEqual(200);
+    // console.log(response2.status);
   });
 });

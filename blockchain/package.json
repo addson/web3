@@ -9,8 +9,9 @@
     "start": "node ./dist/blockchain.js",
     "test": "jest  --verbose --runInBand --coverage",
     "test:watch": "jest  --verbose --runInBand --coverage --watchAll",
-    "blockchain": "nodemon -r dotenv/config --exec ts-node ./src/server/blockchainServer.ts --run",
-    "miner": "ts-node ./src/client/minerClient.ts"
+    "blockchain:nodemon": "nodemon --exec ts-node ./src/server/blockchainServer.ts -r dotenv/config  --run",
+    "blockchain": "ts-node ./src/server/blockchainServer.ts -r dotenv/config --run",
+    "miner": "ts-node ./src/client/minerClient.ts -r dotenv/config"
   },
   "keywords": [],
   "author": "",

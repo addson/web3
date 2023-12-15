@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
 import Transaction from '../lib/transaction';
+import TransactionType from '../lib/transactionType';
 
 const PORT: number = parseInt(`$process.env.BLOCKCHAIN_PORT`) || 3000;
 const app = express();
@@ -21,7 +22,8 @@ const blockchain = new Blockchain();
 
 app.get('/status', (req: Request, res: Response, next: NextFunction) => {
   res.json({
-    numberOfBlocks: blockchain.blocks.length,
+    memPool: blockchain.transactionsMemPool.length,
+    next_block: blockchain.blocks.length,
     isValid: blockchain.isValid(),
     lastBlock: blockchain.getLastBlock(),
   });
@@ -92,14 +94,14 @@ app.get(
       });
     }
 
-    return res.json('Transactions Mempool is empty!');
+    return res.status(400).json({ error: 'Transactions Mempool is empty!' });
   },
 );
 
 app.post(
   '/transactions/',
   (req: Request, res: Response, next: NextFunction) => {
-    const transactionsData: any[] = req.body;
+    const transactionsData: Transaction[] = req.body;
 
     if (!Array.isArray(transactionsData) || transactionsData.length === 0) {
       return res.status(422).json({
@@ -109,11 +111,21 @@ app.post(
 
     //this ensures that the functions of Transaction object are loaded too
     const transactions: Transaction[] = transactionsData.map(
-      item => new Transaction(item as Transaction),
+      item =>
+        new Transaction({
+          type: item.type,
+          data: item.data,
+          timestamp: item.timestamp,
+          hash: item.hash,
+        } as Transaction) as Transaction,
     );
 
     const invalidTransaction = transactions.find(
-      tx => tx.hash === undefined || tx.data === undefined,
+      tx =>
+        tx.hash === undefined ||
+        tx.data === undefined ||
+        tx.hash === '' ||
+        tx.data === '',
     );
     if (invalidTransaction) {
       return res.status(422).json({
@@ -122,6 +134,7 @@ app.post(
     }
 
     const validation = blockchain.addTransactions(transactions);
+    // console.log(validation);
 
     if (validation.success) {
       return res.status(201).json(transactions);

@@ -17,10 +17,10 @@ export default class Blockchain {
 
   nextIndex: number = 0;
 
-  // static to running just once globally fo all class isntances
+  // static to running just once globally fo all class instances
   // readonly means that this fild can not be changed.
   // Increasing the difficulty every N number blocks.
-  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 25;
+  static readonly CHALLENGE_FIFFICULTY_FACTOR: number = 3;
 
   //the miner will have to generates a hash with 62 hashs on the left
   static readonly MAX_CHALLENGE_FIFFICULTY_FACTOR: number = 62;
@@ -66,64 +66,9 @@ export default class Blockchain {
    * @returns the challenge Difficult golden number that should be resolved by the miners
    */
   generatesDifficultChallengeGoldenNumber(): number {
+    //Round up
     return Math.ceil(
-      //Round up
       this.blocks.length / Blockchain.CHALLENGE_FIFFICULTY_FACTOR,
-    );
-  }
-
-  /**
-   * Add transactions list on transactionsMemPool. It will be validated before...
-   *
-   * @param transactions transactions list to be added on transactionsMemPool
-   * @returns
-   */
-  addTransactions(transactions: Transaction[]): Validation {
-    if (!transactions || transactions.length === 0) {
-      return new Validation(
-        false,
-        'These txs are empty, so could not be added.',
-      );
-    }
-
-    if (
-      this.transactionsMemPool.some(txMemPool =>
-        transactions.map(tx => tx.hash).includes(txMemPool.hash),
-      )
-    ) {
-      return new Validation(
-        false,
-        'Duplicated tx in transactionsMemPool, so could not be added.',
-      );
-    }
-
-    if (
-      this.blocks.some(b =>
-        b.transactions.some(txBlock =>
-          transactions.map(tx => tx.hash).includes(txBlock.hash),
-        ),
-      )
-    ) {
-      return new Validation(
-        false,
-        'Duplicated tx in blockchain, so could not be added.',
-      );
-    }
-
-    const validations = transactions.map(tx => tx.isValid());
-    if (validations.filter(val => !val.success).length > 0) {
-      return new Validation(
-        false,
-        'At least one of these txs is invalid, so could not be added.',
-      );
-    }
-
-    //if theses transactions are valid, so we add all these on the transactionsMemPool
-    this.transactionsMemPool.push(...transactions);
-
-    return new Validation(
-      true,
-      `Transactions added to transactionsMemPool: ${transactions.toString()}`,
     );
   }
 
@@ -148,19 +93,19 @@ export default class Blockchain {
         `Invalid Block: ${block.index} ${validation.message}`,
       );
 
-    //updating transactionsMemPool removing regular
-    //transactions that are been entering on current block
-    const blockTransactionsHashs = block.transactions
-      .filter(tx => tx.type === TransactionType.FEE)
+    //updating transactionsMemPool removing regular transactions
+    //from transactionsMemPool that are on current candidate block
+    const blockRegularTransactionsHashs = block.transactions
+      .filter(tx => tx.type === TransactionType.REGULAR)
       .map(tx => tx.hash);
     const newTransactionsMemPool = this.transactionsMemPool.filter(
-      tx => !blockTransactionsHashs.includes(tx.hash),
+      tx => !blockRegularTransactionsHashs.includes(tx.hash),
     );
 
     //Validating if newTransactionsMemPool were there
     //on the original this.transactionsMemPool
     if (
-      newTransactionsMemPool.length + blockTransactionsHashs.length !==
+      newTransactionsMemPool.length + blockRegularTransactionsHashs.length !==
       this.transactionsMemPool.length
     ) {
       return new Validation(
@@ -287,5 +232,65 @@ export default class Blockchain {
       feePerTx,
       maxDifficultChallenge,
     } as BlockInfo;
+  }
+
+  /**
+   * Add transactions list on transactionsMemPool. It will be validated before...
+   *
+   * @param transactions transactions list to be added on transactionsMemPool
+   * @returns
+   */
+  addTransactions(transactions: Transaction[]): Validation {
+    if (!transactions || transactions.length === 0) {
+      return new Validation(
+        false,
+        'These txs are empty, so could not be added.',
+      );
+    }
+
+    if (
+      this.transactionsMemPool.some(txMemPool =>
+        transactions.map(tx => tx.hash).includes(txMemPool.hash),
+      )
+    ) {
+      return new Validation(
+        false,
+        'Duplicated tx in transactionsMemPool, so could not be added.',
+      );
+    }
+
+    if (
+      this.blocks.some(b =>
+        b.transactions.some(txBlock =>
+          transactions.map(tx => tx.hash).includes(txBlock.hash),
+        ),
+      )
+    ) {
+      return new Validation(
+        false,
+        'Duplicated tx in blockchain, so could not be added.',
+      );
+    }
+
+    const validations = transactions.map(tx => tx.isValid());
+    if (validations.filter(val => !val.success).length > 0) {
+      return new Validation(
+        false,
+        'At least one of these txs is invalid, so could not be added.',
+      );
+    }
+
+    //if theses transactions are valid, so we add all these on the transactionsMemPool
+    this.transactionsMemPool.push(...transactions);
+
+    return new Validation(
+      true,
+      `Transactions added to transactionsMemPool: ${transactions.reduce(
+        (txString, transaction) => {
+          return txString + ' - ' + transaction.hash;
+        },
+        '',
+      )}`,
+    );
   }
 }

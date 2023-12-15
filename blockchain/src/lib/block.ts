@@ -13,7 +13,7 @@ export default class Block {
   hash: string = '';
   previousHash: string;
   transactions: Transaction[];
-  nonce: number; //number used once
+  nonce: number; //number used once (just one time)
   miner: string; //miner hash that created this block
 
   /**
@@ -75,10 +75,12 @@ export default class Block {
    * This hash uses all the current block data to assign the new current block.
    *
    * @param difficultChallenge the blockchain current challenge difficult.
-   * @param miner the miner wallet address
+   * @param miner the miner wallet address (publicKey)
    */
   mine(difficultChallenge: number, miner: string) {
     this.miner = miner;
+
+    // Returns a quantity of zeros that have to be put before the next hash to be mined.
     const prefix = this.getHashPrefix(difficultChallenge);
 
     //only ends up when the hash begins with the prefix
@@ -86,9 +88,13 @@ export default class Block {
       this.nonce++;
       this.hash = this.getHash();
     } while (!this.hash.startsWith(prefix));
+
+    // console.log('>> Block Minning was just ended with success...');
   }
 
   /**
+   * Returns a quantity of zeros that have to be put before the next hash mined.
+   *
    * This join all empty elements array passing 0 as separator.
    * A valid hash depends on the number of leading zeros in the hash.
    *
@@ -166,6 +172,7 @@ export default class Block {
       return new Validation(false, `This Block was NOT Mined`);
     }
 
+    // Returns a quantity of zeros that have to be put before the next hash mined.
     const prefix = this.getHashPrefix(difficultChallenge);
     if (this.hash !== this.getHash() || !this.hash.startsWith(prefix)) {
       return new Validation(false, `Invalid hash: ${this.getHash()}`);
