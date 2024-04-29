@@ -300,4 +300,8 @@ export default class Blockchain {
       )}`,
     );
   }
+
+  addXX() {
+    console.log('teste');
+  }
 }
