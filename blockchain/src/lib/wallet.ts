@@ -11,6 +11,12 @@ export default class Wallet {
   privateKey: string;
   publicKey: string;
 
+  /**
+   *
+   *
+   * @param wifOrPrivateKey Wallet Import Format (WIF) or private key
+   */
+
   constructor(wifOrPrivateKey?: string) {
     let keys;
     if (wifOrPrivateKey) {
