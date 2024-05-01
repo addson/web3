@@ -12,7 +12,9 @@ export default class Wallet {
   publicKey: string;
 
   /**
-   *
+   * Important: WIF é uma maneira conveniente e segura de representar chaves privadas,
+   * permitindo que os usuários importem e exportem facilmente suas chaves entre diferentes
+   * carteiras e aplicativos sem comprometer a segurança.
    *
    * @param wifOrPrivateKey Wallet Import Format (WIF) or private key
    */
