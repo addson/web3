@@ -1,14 +1,28 @@
 import request from 'supertest';
-import { describe, test, expect, jest } from '@jest/globals';
+import { describe, test, expect, jest, beforeAll } from '@jest/globals';
 import { app } from '../src/server/blockchainServer';
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
+import Wallet from '../src/lib/wallet';
 
 jest.mock('../src/lib/block');
 jest.mock('../src/lib/blockchain');
 
 describe('BlockchainServer Tests', () => {
+  let wallet: Wallet;
+  let txInput: TransactionInput;
+
+  beforeAll(() => {
+    wallet = new Wallet();
+    txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+    txInput.sign(wallet.privateKey);
+  });
+
   test('GET /status - Should return status', async () => {
     const response = await request(app).get('/status/');
     expect(response.status).toEqual(200);
@@ -72,11 +86,12 @@ describe('BlockchainServer Tests', () => {
     expect(response.status).toEqual(422);
   });
 
-  test('POST /transactions - Should NOT add transactions with hash or data empty', async () => {
+  test('POST /transactions - Should NOT add transactions with hash, txInput or to empty', async () => {
     const transaction = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      data: '',
+      txInput: txInput,
+      //to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const response = await request(app)
@@ -88,12 +103,14 @@ describe('BlockchainServer Tests', () => {
   test('POST /transactions - Should NOT add transactions as any transaction is invalid.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     tx2.hash = 'INVALIDATING_THE_HASH';
@@ -113,12 +130,14 @@ describe('BlockchainServer Tests', () => {
   test('POST /transactions - Should successfully add transactions.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const transactions = new Array() as Transaction[];
@@ -136,12 +155,14 @@ describe('BlockchainServer Tests', () => {
   test('GET /transactions - Should retrieve a specific transaction on the blockchain.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const transactions = new Array() as Transaction[];
@@ -160,12 +181,14 @@ describe('BlockchainServer Tests', () => {
   test('GET /transactions - Should get all next transactions on the blockchain.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const transactions = new Array() as Transaction[];

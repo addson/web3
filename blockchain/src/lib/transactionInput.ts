@@ -8,6 +8,7 @@ const ECPair = ECPairFactory(ecc);
 
 /**
  * Class representing a transaction input in a blockchain transaction.
+ * This class details the origin of the funds that initiated the transaction.
  */
 export default class TransactionInput {
   // Public address of the sender of the transaction.
@@ -27,21 +28,29 @@ export default class TransactionInput {
     this.signature = txInput?.signature || '';
   }
 
-  //Signs the transaction input using a private key, producing a hash of the fromAddress and amount.
-  //it uses the private key to sign in
+  /**
+   * Signs the transaction input using a private key, producing a hash of the fromAddress and amount.
+   * @param privateKey it uses the private key to sign in
+   */
   sign(privateKey: string): void {
     this.signature = ECPair.fromPrivateKey(Buffer.from(privateKey, 'hex'))
       .sign(Buffer.from(this.getHash(), 'hex'))
       .toString('hex');
   }
 
-  //Generates a SHA-256 hash of the fromAddress concatenated with the amount.
+  /**
+   * Generates a SHA-256 hash of the fromAddress concatenated with the amount.
+   * @returns string txInput hash
+   */
   getHash(): string {
     return sha256(this.fromAddress + this.amount).toString();
   }
 
-  //Verifies the integrity and authenticity of the transaction input using the public key.
-  //it uses the public key to verify
+  /**
+   * Verifies the integrity and authenticity of the transaction input using the public key.
+   * it uses the public key to verify.
+   * @returns if this txInput is valid or not
+   */
   isValid(): Validation {
     if (!this.signature) {
       return new Validation(false, 'signature is required');

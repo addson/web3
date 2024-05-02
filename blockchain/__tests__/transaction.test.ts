@@ -1,13 +1,26 @@
 import { describe, it, expect, beforeAll } from '@jest/globals';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
+import Wallet from '../src/lib/wallet';
 
 describe('Transaction tests', () => {
-  beforeAll(() => {});
+  let wallet: Wallet;
+  let txInput: TransactionInput;
+
+  beforeAll(() => {
+    wallet = new Wallet();
+    txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+    txInput.sign(wallet.privateKey);
+  });
 
   it('Should be a transaction valid (REGULAR DEFAULT)', () => {
     const tx = new Transaction({
-      data: 'TX type Regular',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const valid = tx.isValid();
@@ -17,10 +30,12 @@ describe('Transaction tests', () => {
   it('Should be a transaction valid (FEE)', () => {
     const tx = new Transaction({
       type: TransactionType.FEE,
-      data: 'TX type Fee',
+      to: 'PUBLIC_KEY_TARGET',
+      txInput: txInput,
     } as Transaction);
 
     const valid = tx.isValid();
+    console.log(valid.message);
     expect(valid.success).toEqual(true);
   });
 
@@ -28,7 +43,7 @@ describe('Transaction tests', () => {
     const tx = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      data: 'TX type Regular',
+      // txInput: txInput,
       hash: 'abc',
     } as Transaction);
 
@@ -39,7 +54,7 @@ describe('Transaction tests', () => {
   it('Should NOT be a transaction valid (invalid hash changed after created)', () => {
     const tx = new Transaction({
       type: TransactionType.FEE,
-      data: 'TX type Fee',
+      txInput: txInput,
     } as Transaction);
 
     //invalidating the hash

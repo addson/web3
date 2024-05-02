@@ -1,13 +1,27 @@
-import { describe, it, expect, jest } from '@jest/globals';
+import { describe, it, expect, jest, beforeAll } from '@jest/globals';
 import Blockchain from '../src/lib/blockchain';
 import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
+import Wallet from '../src/lib/wallet';
 
 //mocking the block class
 jest.mock('../src/lib/block');
 
 describe('Blockchain tests', () => {
+  let wallet: Wallet;
+  let txInput: TransactionInput;
+
+  beforeAll(() => {
+    wallet = new Wallet();
+    txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+    txInput.sign(wallet.privateKey);
+  });
+
   it('Should has the first GENESIS block', () => {
     const blockchain = new Blockchain();
     expect(blockchain.blocks.length).toBeGreaterThan(0);
@@ -55,7 +69,8 @@ describe('Blockchain tests', () => {
         transactions: [
           new Transaction({
             type: TransactionType.REGULAR,
-            data: 'Bloco 2',
+            txInput: txInput,
+            to: 'PUBLIC_KEY_TARGET',
           } as Transaction),
         ],
       } as Block),
@@ -70,7 +85,8 @@ describe('Blockchain tests', () => {
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -99,7 +115,8 @@ describe('Blockchain tests', () => {
     const blockchain = new Blockchain();
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -117,7 +134,8 @@ describe('Blockchain tests', () => {
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -145,12 +163,14 @@ describe('Blockchain tests', () => {
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
     tx2.hash = 'INVALIDATING HASH';
 
@@ -165,12 +185,14 @@ describe('Blockchain tests', () => {
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const validation = blockchain.addTransactions([tx1, tx2] as Transaction[]);
@@ -184,12 +206,14 @@ describe('Blockchain tests', () => {
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     blockchain.addTransactions([tx1, tx2] as Transaction[]);
@@ -212,12 +236,14 @@ describe('Blockchain tests', () => {
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET_1',
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET_2',
     } as Transaction);
 
     blockchain.addTransactions([tx1, tx2] as Transaction[]);
@@ -256,14 +282,16 @@ describe('Blockchain tests', () => {
     //added just tx1
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX1',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
     blockchain.addTransactions([tx1] as Transaction[]);
 
     //tx2 not added, but we try search it on blockchain
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX2',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
     const transactionSearch = blockchain.getTransaction(tx2.hash);
 
@@ -278,7 +306,8 @@ describe('Blockchain tests', () => {
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -303,7 +332,8 @@ describe('Blockchain tests', () => {
         transactions: [
           new Transaction({
             type: TransactionType.REGULAR,
-            data: 'Bloco 2',
+            txInput: txInput,
+            to: 'PUBLIC_KEY_TARGET',
           } as Transaction),
         ],
       } as Block),

@@ -3,18 +3,30 @@ import Block from '../src/lib/block';
 import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
+import TransactionInput from '../src/lib/transactionInput';
+import Wallet from '../src/lib/wallet';
 
 describe('Block tests', () => {
   const challengeDifficultExample = 0;
   const minerWalletExample = 'addson';
+  let wallet: Wallet;
+  let txInput: TransactionInput;
   let genesis: Block;
 
   beforeAll(() => {
+    wallet = new Wallet();
+    txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+    txInput.sign(wallet.privateKey);
+
     genesis = new Block({
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          data: 'GENESIS BLOCK',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -27,7 +39,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -55,7 +68,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as BlockInfo);
@@ -97,7 +111,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -123,7 +138,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -172,11 +188,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          data: 'Bloco 1',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -202,7 +220,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -228,7 +247,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -250,7 +270,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          data: 'Bloco 2',
+          txInput: txInput,
+          to: 'PUBLIC_KEY_TARGET',
         } as Transaction),
       ],
     } as Block);
@@ -273,12 +294,14 @@ describe('Block tests', () => {
   it('Should NOT be valid Block (as there is more then one FEE transactions)', () => {
     const validTx1 = new Transaction({
       type: TransactionType.FEE,
-      data: 'TX type Fee',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
+    //AS THERE IS NOT A TRANSACTION INPUT SIGNATURE
     const invalidTx3 = new Transaction({
       type: TransactionType.FEE,
-      data: 'TX type Fee',
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const block = new Block({
@@ -303,17 +326,20 @@ describe('Block tests', () => {
   it('Should NOT be valid Block (as there is at least one Invalid Transaction)', () => {
     const validTx1 = new Transaction({
       type: TransactionType.FEE,
-      data: 'TX type Fee',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
+    //AS THERE IS NOT A TRANSACTION INPUT SIGNATURE
     const invalidTx3 = new Transaction({
       type: TransactionType.REGULAR,
-      data: '', //wrong empty data
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     const invalidTx4 = new Transaction({
       type: TransactionType.REGULAR,
-      data: 'TX type Regular',
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
     } as Transaction);
 
     //invalidating the hash

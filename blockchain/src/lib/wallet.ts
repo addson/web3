@@ -31,7 +31,8 @@ export default class Wallet {
       keys = ECPair.makeRandom();
     }
 
-    this.privateKey = keys.privateKey?.toString('hex') || ''; //return Buffer
-    this.publicKey = keys.publicKey?.toString('hex') || ''; //return Buffer
+    /* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
+    this.privateKey = keys.privateKey?.toString('hex') || '';
+    this.publicKey = keys.publicKey.toString('hex');
   }
 }

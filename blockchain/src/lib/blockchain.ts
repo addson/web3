@@ -4,6 +4,7 @@ import BlockInfo from './blockInfo';
 import Transaction from './transaction';
 import TransactionType from './transactionType';
 import TransactionSearch from './transactionSearch';
+import TransactionInput from './transactionInput';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -40,7 +41,8 @@ export default class Blockchain {
         transactions: [
           new Transaction({
             type: TransactionType.FEE,
-            data: 'GENESIS BLOCK',
+            txInput: new TransactionInput(),
+            to: 'PUBLIC_KEY_OF_FIRST_TRANSACTION',
           } as Transaction),
         ],
       } as Block),
@@ -299,9 +301,5 @@ export default class Blockchain {
         '',
       )}`,
     );
-  }
-
-  addXX() {
-    console.log('teste');
   }
 }

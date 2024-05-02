@@ -17,8 +17,8 @@ export default class Transaction {
   constructor(tx?: Transaction) {
     this.type = tx?.type || TransactionType.REGULAR;
     this.timestamp = tx?.timestamp || Date.now();
+    this.txInput = new TransactionInput(tx?.txInput);
     this.to = tx?.to || '';
-    this.txInput = new TransactionInput(tx?.txInput) || new TransactionInput();
     this.hash = tx?.hash || this.getHash();
   }
 
@@ -36,7 +36,17 @@ export default class Transaction {
     if (this.hash !== this.getHash())
       return new Validation(false, 'Invalid Hash');
 
-    if (!this.to) return new Validation(false, 'Invalid to');
+    if (!this.to) return new Validation(false, 'Invalid EMPTY to');
+
+    if (this.txInput) {
+      const validation = this.txInput.isValid();
+      if (!validation.success) {
+        return new Validation(
+          false,
+          `Invalid transaction as: ${validation.message}`,
+        );
+      }
+    }
 
     return new Validation();
   }

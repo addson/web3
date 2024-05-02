@@ -6,7 +6,6 @@ import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
 import Transaction from '../lib/transaction';
-import TransactionType from '../lib/transactionType';
 
 const PORT: number = parseInt(`$process.env.BLOCKCHAIN_PORT`) || 3000;
 const app = express();
@@ -114,7 +113,8 @@ app.post(
       item =>
         new Transaction({
           type: item.type,
-          data: item.data,
+          txInput: item.txInput,
+          to: item.to,
           timestamp: item.timestamp,
           hash: item.hash,
         } as Transaction) as Transaction,
@@ -123,9 +123,10 @@ app.post(
     const invalidTransaction = transactions.find(
       tx =>
         tx.hash === undefined ||
-        tx.data === undefined ||
+        tx.txInput === undefined ||
+        tx.to === undefined ||
         tx.hash === '' ||
-        tx.data === '',
+        tx.to === '',
     );
     if (invalidTransaction) {
       return res.status(422).json({
