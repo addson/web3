@@ -2,6 +2,9 @@ import Wallet from '../lib/wallet';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import readline from 'readline';
+import Transaction from '../lib/transaction';
+import TransactionType from '../lib/transactionType';
+import TransactionInput from '../lib/transactionInput';
 
 dotenv.config();
 
@@ -104,9 +107,58 @@ function sendTx() {
   if (!myWalletPub) {
     console.log(`You do not have a wallet yet!`);
 
-    //todo sendTx using API Calling
     preMenu();
   }
+
+  console.log(`Your wallet is ${myWalletPub}`);
+  rl.question(`To Wallet: `, walletTo => {
+    if (walletTo.length < 66) {
+      console.log(`Wrong public address of wallet!`);
+      return preMenu();
+    }
+
+    rl.question(`Amount: `, async amountStr => {
+      if (amountStr === '0') {
+        console.log(`Wrong amount to be sent!`);
+        return preMenu();
+      }
+
+      const amount = parseInt(amountStr);
+      if (!amount) {
+        console.log(`Wrong amount to be sent!`);
+        return preMenu();
+      }
+
+      //gets Balance validation
+
+      const transaction = new Transaction();
+      transaction.timestamp = Date.now();
+      transaction.to = walletTo;
+      transaction.type = TransactionType.REGULAR;
+      transaction.txInput = new TransactionInput({
+        amount,
+        fromAddress: myWalletPub,
+      } as TransactionInput);
+      transaction.txInput.sign(myWalletPriv);
+      transaction.hash = transaction.getHash();
+
+      try {
+        const transactionResponse = await axios.post(
+          `${BLOCKCHAIN_SERVER}transactions/`,
+          [transaction],
+        );
+
+        console.log(
+          `Transaction sent and acepted by blockchain main pool and waiting the miners...`,
+        );
+        console.log(transactionResponse.data);
+      } catch (error: any) {
+        console.error(error.response ? error.response.data : error.message);
+      }
+
+      return preMenu();
+    });
+  });
 }
 
 menu();

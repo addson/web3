@@ -268,6 +268,20 @@ export default class Blockchain {
       );
     }
 
+    const from = transactions[0].txInput.fromAddress;
+    if (
+      this.transactionsMemPool.some(txMemPool =>
+        transactions.map(tx => tx.txInput.fromAddress).includes(from),
+      )
+    ) {
+      return new Validation(
+        false,
+        'This wallet has a pending transaction on main pool that has not mined yet, so could not be added.',
+      );
+    }
+
+    //todo validate the founds origin
+
     if (
       this.blocks.some(b =>
         b.transactions.some(txBlock =>
