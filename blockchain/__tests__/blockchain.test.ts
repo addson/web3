@@ -201,6 +201,27 @@ describe('Blockchain tests', () => {
     expect(validation.success).toEqual(true);
   });
 
+  it('Should NOT add transaction with pending tx', () => {
+    const blockchain = new Blockchain();
+
+    const tx1 = new Transaction({
+      type: TransactionType.REGULAR,
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET',
+    } as Transaction);
+    blockchain.addTransactions([tx1] as Transaction[]);
+
+    const tx2 = new Transaction({
+      type: TransactionType.REGULAR,
+      txInput: txInput,
+      to: 'PUBLIC_KEY_TARGET_2',
+    } as Transaction);
+    const validation = blockchain.addTransactions([tx2] as Transaction[]);
+
+    // console.log(validation.message);
+    expect(validation.success).toEqual(false);
+  });
+
   it('Should get transaction from transactionsMemPool', () => {
     const blockchain = new Blockchain();
 

@@ -5,6 +5,7 @@ import readline from 'readline';
 import Transaction from '../lib/transaction';
 import TransactionType from '../lib/transactionType';
 import TransactionInput from '../lib/transactionInput';
+import { response } from 'express';
 
 dotenv.config();
 
@@ -32,7 +33,8 @@ function menu() {
     console.log('1 - Create Wallet');
     console.log('2 - Recover Wallet');
     console.log('3 - Balance');
-    console.log('4 - Send new Transaction');
+    console.log('4 - Send new Transaction to Blockchain');
+    console.log('5 - Search Transaction on Blockchain');
     console.log('');
 
     rl.question('Choose your option: ', answer => {
@@ -49,8 +51,11 @@ function menu() {
         case '4':
           sendTx();
           break;
+        case '5':
+          searchTx();
+          break;
         default: {
-          console.log('Wrong Option!');
+          console.log('Wrong Option! Choose 1|2|3|4|5');
           menu();
         }
       }
@@ -101,6 +106,7 @@ function balance() {
     preMenu();
   }
 }
+
 function sendTx() {
   console.clear();
 
@@ -158,6 +164,17 @@ function sendTx() {
 
       return preMenu();
     });
+  });
+}
+
+function searchTx() {
+  console.clear();
+  rl.question('Your tx hash sent to blockchain: ', async hash => {
+    const response = await axios.get(
+      `${BLOCKCHAIN_SERVER}transactions/${hash}`,
+    );
+    console.log(response.data);
+    return preMenu();
   });
 }
 
