@@ -97,7 +97,7 @@ export default class Blockchain {
         to: 'PUBLIC_KEY_TARGET',
       } as Transaction),
     ];
-    const difficultChallenge = 0;
+    const difficultChallenge = 1;
     const previousHash = this.getLastBlock().hash;
     const index = this.blocks.length;
     const feePerTx = this.getFeePerTx();

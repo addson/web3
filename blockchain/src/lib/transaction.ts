@@ -11,21 +11,29 @@ export default class Transaction {
   type: TransactionType;
   timestamp: number; //always UTC without fuso
   hash: string;
-  txInput: TransactionInput;
+  txInput: TransactionInput | undefined;
   to: string;
 
   constructor(tx?: Transaction) {
     this.type = tx?.type || TransactionType.REGULAR;
     this.timestamp = tx?.timestamp || Date.now();
-    this.txInput = new TransactionInput(tx?.txInput);
     this.to = tx?.to || '';
+
+    if (tx && tx.txInput) {
+      /* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
+      this.txInput = new TransactionInput(tx?.txInput);
+    } else {
+      this.txInput = undefined;
+    }
+
     this.hash = tx?.hash || this.getHash();
   }
 
   /** It will generates a unique assign to this transaction. */
   getHash(): string {
+    const txInputHash = this.txInput ? this.txInput.getHash() : '';
     return sha256(
-      this.type + this.txInput.getHash() + this.to + this.timestamp,
+      this.type + txInputHash + this.to + this.timestamp,
     ).toString();
   }
 

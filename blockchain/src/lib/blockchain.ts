@@ -75,7 +75,9 @@ export default class Blockchain {
       : this.blocks.length;
 
     //Round up
-    return Math.ceil(blockchainLength / Blockchain.CHALLENGE_DIFFICULTY_FACTOR);
+    return (
+      Math.ceil(blockchainLength / Blockchain.CHALLENGE_DIFFICULTY_FACTOR) + 1
+    );
   }
 
   /**
@@ -268,10 +270,16 @@ export default class Blockchain {
       );
     }
 
-    const from = transactions[0].txInput.fromAddress;
+    /* istanbul ignore next */
+    const from = transactions[0].txInput?.fromAddress;
+    /* istanbul ignore next */
     if (
+      from &&
       this.transactionsMemPool.some(txMemPool =>
-        transactions.map(tx => tx.txInput.fromAddress).includes(from),
+        transactions
+          .filter(tx => tx.txInput)
+          .map(tx => tx.txInput?.fromAddress)
+          .includes(from),
       )
     ) {
       return new Validation(

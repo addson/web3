@@ -35,8 +35,43 @@ describe('Transaction tests', () => {
     } as Transaction);
 
     const valid = tx.isValid();
-    console.log(valid.message);
+    // console.log(valid.message);
     expect(valid.success).toEqual(true);
+  });
+
+  it('Should NOT be a transaction valid as the EMPTY to field', () => {
+    const txInputNotAssigned = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+
+    const tx = new Transaction({
+      type: TransactionType.REGULAR,
+      timestamp: Date.now(),
+      txInput: txInputNotAssigned,
+    } as Transaction);
+
+    const valid = tx.isValid();
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be a transaction valid as txInput is invalid', () => {
+    const txInputNotAssigned = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+
+    const tx = new Transaction({
+      type: TransactionType.REGULAR,
+      timestamp: Date.now(),
+      txInput: txInputNotAssigned,
+      to: 'PUBLIC_KEY_TARGET',
+    } as Transaction);
+
+    const valid = tx.isValid();
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
   });
 
   it('Should NOT be a transaction valid (invalid hash on creation)', () => {

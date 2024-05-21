@@ -7,7 +7,7 @@ import TransactionInput from '../src/lib/transactionInput';
 import Wallet from '../src/lib/wallet';
 
 describe('Block tests', () => {
-  const challengeDifficultExample = 0;
+  const challengeDifficultExample = 1;
   const minerWalletExample = 'addson';
   let wallet: Wallet;
   let txInput: TransactionInput;
@@ -26,7 +26,7 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.FEE,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
@@ -40,14 +40,19 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -56,6 +61,32 @@ describe('Block tests', () => {
     );
     // console.log(valid.message);
     expect(valid.success).toEqual(true);
+  });
+
+  it('Should NOT be valid as there is NOT a FEE TX', () => {
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+      ],
+    } as Block);
+
+    //so that this block is valid we have to mine
+    //a new hash that attends all requirements...
+    block.mine(challengeDifficultExample, wallet.publicKey);
+
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
   });
 
   it('Should create a block from a BlockInfo', () => {
@@ -69,14 +100,19 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as BlockInfo);
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -87,7 +123,7 @@ describe('Block tests', () => {
     expect(valid.success).toEqual(true);
   });
 
-  it('Should NOT be valid (fallbacks)', () => {
+  it('Should NOT be valid as transactions are empty', () => {
     const block = new Block();
 
     //so that this block is valid we have to mine
@@ -112,15 +148,17 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -139,15 +177,17 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     block.timestamp = -1;
     block.hash = block.getHash(); //updating hash based on new
@@ -167,10 +207,7 @@ describe('Block tests', () => {
       transactions: [] as Array<Transaction>,
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -189,20 +226,17 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.FEE,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -221,15 +255,17 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -248,7 +284,12 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
@@ -271,15 +312,17 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.REGULAR,
           txInput: txInput,
-          to: 'PUBLIC_KEY_TARGET',
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
         } as Transaction),
       ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    //It's not due to the absence of mining that the block's hash is invalid.
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     block.hash = 'hash has been tampered with...';
     const valid = block.isValid(
@@ -292,27 +335,53 @@ describe('Block tests', () => {
   });
 
   it('Should NOT be valid Block (as there is more then one FEE transactions)', () => {
-    const validTx1 = new Transaction({
-      type: TransactionType.FEE,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
-    } as Transaction);
-
-    //AS THERE IS NOT A TRANSACTION INPUT SIGNATURE
-    const invalidTx3 = new Transaction({
-      type: TransactionType.FEE,
-      to: 'PUBLIC_KEY_TARGET',
-    } as Transaction);
-
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      transactions: [validTx1, invalidTx3],
+      transactions: [
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+      ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
+
+    const valid = block.isValid(
+      genesis.hash,
+      genesis.index,
+      challengeDifficultExample,
+    );
+    // console.log(valid.message);
+    expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be valid Block as the feeTx destination is different from miner)', () => {
+    const block = new Block({
+      index: 1,
+      previousHash: genesis.hash,
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+      ],
+    } as Block);
+
+    block.mine(challengeDifficultExample, 'OTHER_ADDRESS_MINER');
 
     const valid = block.isValid(
       genesis.hash,
@@ -324,18 +393,6 @@ describe('Block tests', () => {
   });
 
   it('Should NOT be valid Block (as there is at least one Invalid Transaction)', () => {
-    const validTx1 = new Transaction({
-      type: TransactionType.FEE,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
-    } as Transaction);
-
-    //AS THERE IS NOT A TRANSACTION INPUT SIGNATURE
-    const invalidTx3 = new Transaction({
-      type: TransactionType.REGULAR,
-      to: 'PUBLIC_KEY_TARGET',
-    } as Transaction);
-
     const invalidTx4 = new Transaction({
       type: TransactionType.REGULAR,
       txInput: txInput,
@@ -348,12 +405,22 @@ describe('Block tests', () => {
     const block = new Block({
       index: 1,
       previousHash: genesis.hash,
-      transactions: [validTx1, invalidTx3, invalidTx4],
+      transactions: [
+        new Transaction({
+          type: TransactionType.REGULAR,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+        new Transaction({
+          type: TransactionType.FEE,
+          txInput: txInput,
+          to: wallet.publicKey,
+        } as Transaction),
+        invalidTx4,
+      ],
     } as Block);
 
-    //so that this block is valid we have to mine
-    //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, minerWalletExample);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,

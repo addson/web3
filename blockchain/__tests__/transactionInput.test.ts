@@ -11,6 +11,16 @@ describe('Transaction input tests', () => {
     claudia = new Wallet();
   });
 
+  it('txInput sign is required', () => {
+    const txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: addson.publicKey,
+    } as TransactionInput);
+
+    const valid = txInput.isValid();
+    expect(valid.success).toEqual(false);
+  });
+
   it('txInput sign should be valid', () => {
     const txInput = new TransactionInput({
       amount: 10,

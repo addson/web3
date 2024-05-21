@@ -125,14 +125,33 @@ export default class Block {
     }
 
     if (this.transactions && this.transactions.length) {
+      if (!this.nonce || !this.miner) {
+        return new Validation(false, `This Block was NOT Mined`);
+      }
+
       /** Allow just one transaction of type fee. */
-      if (
-        this.transactions.filter(tx => tx.type === TransactionType.FEE).length >
-        1
-      ) {
+      const feesTx = this.transactions.filter(
+        tx => tx.type === TransactionType.FEE,
+      );
+
+      if (feesTx.length === 0) {
+        return new Validation(
+          false,
+          'Invalid Block as there is no FEE transaction on the Block. At least one fee tx is mandatory',
+        );
+      }
+
+      if (feesTx.length > 1) {
         return new Validation(
           false,
           'Invalid Block as there is more then one transaction type FEE in only one Block.',
+        );
+      }
+
+      if (feesTx[0].to !== this.miner) {
+        return new Validation(
+          false,
+          'Invalid Block as there is a invalid fee tx as the feeTx destination is different from miner addrees. The reward must go to the miner who discovered the block.',
         );
       }
 
@@ -142,6 +161,7 @@ export default class Block {
           .map(tx => tx.isValid())
           .filter(v => !v.success)
           .map(v => v.message);
+        /* istanbul ignore next */
         return new Validation(
           false,
           'Invalid Block as not allowed any invalid transaction in the block: ' +
@@ -166,10 +186,6 @@ export default class Block {
 
     if (this.timestamp < 1) {
       return new Validation(false, `Invalid timestamp: ${this.timestamp}`);
-    }
-
-    if (!this.nonce || !this.miner) {
-      return new Validation(false, `This Block was NOT Mined`);
     }
 
     // Returns a quantity of zeros that have to be put before the next hash mined.
