@@ -24,8 +24,6 @@ export default class TransactionOutput {
   }
 
   getGash(): string {
-    return sha256(
-      this.toAddress + this.amount + this.transactionHash,
-    ).toString();
+    return sha256(this.toAddress + this.amount).toString();
   }
 }

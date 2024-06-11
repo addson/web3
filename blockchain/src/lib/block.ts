@@ -125,7 +125,7 @@ export default class Block {
     }
 
     if (this.transactions && this.transactions.length) {
-      if (!this.nonce || !this.miner) {
+      if (!this.nonce || this.nonce < 1 || !this.miner) {
         return new Validation(false, `This Block was NOT Mined`);
       }
 
@@ -148,12 +148,14 @@ export default class Block {
         );
       }
 
-      if (feesTx[0].to !== this.miner) {
+      if (!feesTx[0].txOutputs.some(txo => txo.toAddress === this.miner)) {
         return new Validation(
           false,
           'Invalid Block as there is a invalid fee tx as the feeTx destination is different from miner addrees. The reward must go to the miner who discovered the block.',
         );
       }
+
+      //todo validate fee quantity
 
       /** Not allowed any invalid transaction in the block*/
       if (this.transactions.filter(tx => !tx.isValid().success).length > 0) {

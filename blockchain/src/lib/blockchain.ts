@@ -5,6 +5,7 @@ import Transaction from './transaction';
 import TransactionType from './transactionType';
 import TransactionSearch from './transactionSearch';
 import TransactionInput from './transactionInput';
+import TransactionOutput from './transactionOutput';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -32,22 +33,36 @@ export default class Blockchain {
   /**
    * The constructor always creates the first block, that is called by GENESIS.
    */
-  constructor() {
+  constructor(miner: string) {
+    this.blocks = [];
     this.transactionsMemPool = [];
-    this.blocks = [
-      new Block({
-        index: this.nextIndex,
-        previousHash: '',
-        transactions: [
-          new Transaction({
-            type: TransactionType.FEE,
-            txInput: new TransactionInput(),
-            to: 'PUBLIC_KEY_OF_FIRST_TRANSACTION',
-          } as Transaction),
-        ],
-      } as Block),
-    ];
+
+    const genesis = this.createGenesis(miner);
+    this.blocks.push(genesis);
     this.nextIndex++;
+  }
+
+  createGenesis(miner: string): Block {
+    //todo calculate the rewards quantity
+    const amount = 10;
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [
+        new TransactionOutput({
+          amount: amount,
+          toAddress: miner,
+        } as TransactionOutput),
+      ],
+    } as Transaction);
+
+    tx.hash = tx.getHash();
+    tx.txOutputs[0].transactionHash = tx.hash;
+
+    const block = new Block();
+    block.transactions = [tx];
+    block.mine(this.generatesDifficultChallengeGoldenNumber(), miner);
+
+    return block;
   }
 
   /**
@@ -87,12 +102,15 @@ export default class Blockchain {
    * @returns if all is ok return true
    */
   addBlock(block: Block): Validation {
-    const lastBlock = this.getLastBlock();
+    const nextBlock = this.getNextBlock();
+    if (!nextBlock) {
+      return new Validation(false, `There is no next block info`);
+    }
 
     const validation = block.isValid(
-      lastBlock.hash,
-      lastBlock.index,
-      this.generatesDifficultChallengeGoldenNumber(),
+      nextBlock.previousHash,
+      nextBlock.index - 1,
+      nextBlock.difficultChallenge,
     );
 
     if (!validation.success)
@@ -270,22 +288,23 @@ export default class Blockchain {
       );
     }
 
-    /* istanbul ignore next */
-    const from = transactions[0].txInput?.fromAddress;
-    /* istanbul ignore next */
-    if (
-      from &&
-      this.transactionsMemPool.some(txMemPool =>
-        transactions
-          .filter(tx => tx.txInput)
-          .map(tx => tx.txInput?.fromAddress)
-          .includes(from),
-      )
-    ) {
-      return new Validation(
-        false,
-        'This wallet has a pending transaction on main pool that has not mined yet, so could not be added.',
-      );
+    if (transactions[0].txInputs && transactions[0].txInputs.length) {
+      /* istanbul ignore next */
+      const from = transactions[0].txInputs[0].fromAddress;
+      /* istanbul ignore next */
+
+      const pendingTx = this.transactionsMemPool
+        .filter(tx => tx.txInputs && tx.txInputs.length)
+        .map(tx => tx.txInputs)
+        .flat()
+        .filter(txi => txi!.fromAddress === from);
+
+      if (pendingTx && pendingTx.length) {
+        return new Validation(
+          false,
+          'This wallet has a pending transaction on main pool that has not mined yet, so could not be added.',
+        );
+      }
     }
 
     //todo validate the founds origin

@@ -13,6 +13,7 @@ const ECPair = ECPairFactory(ecc);
 export default class TransactionInput {
   // Public address of the sender of the transaction.
   fromAddress: string;
+
   // Amount to be transacted.
   amount: number;
 
@@ -21,8 +22,12 @@ export default class TransactionInput {
   //the transaction signin is the own transaction hash, nothing more
   signature: string;
 
+  //Which hash of before transaction that generate the funds that are been spent now
+  previousTx: string;
+
   // Constructor initializes a TransactionInput object optionally using an existing one.
   constructor(txInput?: TransactionInput) {
+    this.previousTx = txInput?.previousTx || '';
     this.fromAddress = txInput?.fromAddress || '';
     this.amount = txInput?.amount || 0;
     this.signature = txInput?.signature || '';
@@ -55,6 +60,11 @@ export default class TransactionInput {
     if (!this.signature) {
       return new Validation(false, 'signature is required');
     }
+
+    //todo validate the previeousTx here
+    // if (!this.previousTx || !this.signature) {
+    //   return new Validation(false, 'signature and previewsTx are required');
+    // }
 
     if (this.amount < 1) {
       return new Validation(false, 'amount must be greater then 0');

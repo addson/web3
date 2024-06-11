@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import Blockchain from '../lib/blockchain';
 import Block from '../lib/block';
 import Transaction from '../lib/transaction';
+import Wallet from '../lib/wallet';
+import TransactionOutput from '../lib/transactionOutput';
 
 const PORT: number = parseInt(`$process.env.BLOCKCHAIN_PORT`) || 3000;
 const app = express();
@@ -17,7 +19,9 @@ if (process.argv.includes('--run')) app.use(morgan('tiny'));
 // to turn all HTTP requests to json
 app.use(express.json());
 
-const blockchain = new Blockchain();
+const wallet = new Wallet(process.env.BLOCKCHAIN_WALLET);
+
+const blockchain = new Blockchain(wallet.publicKey);
 
 app.get('/status', (req: Request, res: Response, next: NextFunction) => {
   res.json({
@@ -113,8 +117,8 @@ app.post(
       item =>
         new Transaction({
           type: item.type,
-          txInput: item.txInput,
-          to: item.to,
+          txInputs: item.txInputs,
+          txOutputs: item.txOutputs,
           timestamp: item.timestamp,
           hash: item.hash,
         } as Transaction) as Transaction,
@@ -123,10 +127,10 @@ app.post(
     const invalidTransaction = transactions.find(
       tx =>
         tx.hash === undefined ||
-        tx.txInput === undefined ||
-        tx.to === undefined ||
+        tx.txInputs === undefined ||
+        tx.txOutputs === undefined ||
         tx.hash === '' ||
-        tx.to === '',
+        tx.txOutputs.length < 0,
     );
     if (invalidTransaction) {
       return res.status(422).json({
@@ -145,10 +149,33 @@ app.post(
   },
 );
 
+app.get(
+  '/wallets/:wallet',
+  (req: Request, res: Response, next: NextFunction) => {
+    const wallet = req.params.waallet;
+
+    //todo final version UTXO
+
+    return res.json({
+      balance: 10,
+      fee: blockchain.getFeePerTx(),
+      utxo: [
+        new TransactionOutput({
+          amount: 10,
+          toAddress: wallet,
+          transactionHash: '',
+        } as TransactionOutput),
+      ],
+    });
+  },
+);
+
 /* istanbul ignore next */ //this sentence before ignores the next line to coverage tests
 if (process.argv.includes('--run'))
   app.listen(PORT, () =>
-    console.log(`Blockchain server is running at PORT ${PORT}`),
+    console.log(
+      `Blockchain server is running at PORT ${PORT}. Wallet ${wallet.publicKey}`,
+    ),
   );
 
 export { app };
