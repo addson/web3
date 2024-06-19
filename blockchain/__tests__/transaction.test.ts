@@ -2,25 +2,35 @@ import { describe, it, expect, beforeAll } from '@jest/globals';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 import Wallet from '../src/lib/wallet';
 
 describe('Transaction tests', () => {
   let wallet: Wallet;
+  let walletTo: Wallet;
   let txInput: TransactionInput;
+  let txOutput: TransactionOutput;
 
   beforeAll(() => {
     wallet = new Wallet();
+    walletTo = new Wallet();
+
     txInput = new TransactionInput({
       amount: 10,
       fromAddress: wallet.publicKey,
     } as TransactionInput);
     txInput.sign(wallet.privateKey);
+
+    txOutput = new TransactionOutput({
+      toAddress: walletTo.publicKey,
+      amount: 5,
+    } as TransactionOutput);
   });
 
   it('Should be a transaction valid (REGULAR DEFAULT)', () => {
     const tx = new Transaction({
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const valid = tx.isValid();
@@ -30,8 +40,8 @@ describe('Transaction tests', () => {
   it('Should be a transaction valid (FEE)', () => {
     const tx = new Transaction({
       type: TransactionType.FEE,
-      to: 'PUBLIC_KEY_TARGET',
-      txInput: txInput,
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const valid = tx.isValid();
@@ -48,7 +58,7 @@ describe('Transaction tests', () => {
     const tx = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      txInput: txInputNotAssigned,
+      txInputs: [txInputNotAssigned],
     } as Transaction);
 
     const valid = tx.isValid();
@@ -65,8 +75,8 @@ describe('Transaction tests', () => {
     const tx = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      txInput: txInputNotAssigned,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInputNotAssigned],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const valid = tx.isValid();
@@ -78,7 +88,6 @@ describe('Transaction tests', () => {
     const tx = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      // txInput: txInput,
       hash: 'abc',
     } as Transaction);
 
@@ -89,7 +98,7 @@ describe('Transaction tests', () => {
   it('Should NOT be a transaction valid (invalid hash changed after created)', () => {
     const tx = new Transaction({
       type: TransactionType.FEE,
-      txInput: txInput,
+      txInputs: [txInput],
     } as Transaction);
 
     //invalidating the hash

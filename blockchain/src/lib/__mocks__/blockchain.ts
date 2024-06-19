@@ -5,6 +5,7 @@ import Transaction from '../transaction';
 import TransactionType from '../transactionType';
 import TransactionSearch from '../transactionSearch';
 import TransactionInput from '../transactionInput';
+import TransactionOutput from '../transactionOutput';
 
 /**
  * The mocked blockchain class that represents all chain of blocks
@@ -27,8 +28,8 @@ export default class Blockchain {
         transactions: [
           new Transaction({
             type: TransactionType.FEE,
-            txInput: new TransactionInput(),
-            to: 'PUBLIC_KEY_OF_FIRST_TRANSACTION',
+            txInputs: [new TransactionInput()],
+            txOutputs: [new TransactionOutput()],
           } as Transaction),
         ],
         timestamp: Date.now(),
@@ -93,8 +94,8 @@ export default class Blockchain {
       //todo not done yet...
       new Transaction({
         type: TransactionType.REGULAR,
-        txInput: new TransactionInput(),
-        to: 'PUBLIC_KEY_TARGET',
+        txInputs: [new TransactionInput()],
+        txOutputs: [new TransactionOutput()],
       } as Transaction),
     ];
     const difficultChallenge = 1;

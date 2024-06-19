@@ -11,6 +11,7 @@ export default class Block {
   hash: string = '';
   previousHash: string;
   transactions: Transaction[];
+  miner: string;
 
   /**
    * Constructor for a Moked Block.
@@ -24,6 +25,7 @@ export default class Block {
     this.timestamp = block?.timestamp || Date.now();
     this.previousHash = block?.previousHash || '';
     this.hash = block?.hash || this.getHash();
+    this.miner = block?.miner || '';
 
     /** This ensures that I have complete Transaction objects,
      * with not only properties but also functions */
@@ -58,5 +60,9 @@ export default class Block {
     }
 
     return new Validation();
+  }
+
+  mine(difficultChallenge: number, miner: string) {
+    this.miner = miner;
   }
 }

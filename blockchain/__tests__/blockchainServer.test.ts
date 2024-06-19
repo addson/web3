@@ -5,6 +5,7 @@ import Block from '../src/lib/block';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 import Wallet from '../src/lib/wallet';
 
 jest.mock('../src/lib/block');
@@ -12,15 +13,24 @@ jest.mock('../src/lib/blockchain');
 
 describe('BlockchainServer Tests', () => {
   let wallet: Wallet;
+  let walletTo: Wallet;
   let txInput: TransactionInput;
+  let txOutput: TransactionOutput;
 
   beforeAll(() => {
     wallet = new Wallet();
+    walletTo = new Wallet();
+
     txInput = new TransactionInput({
       amount: 10,
       fromAddress: wallet.publicKey,
     } as TransactionInput);
     txInput.sign(wallet.privateKey);
+
+    txOutput = new TransactionOutput({
+      toAddress: walletTo.publicKey,
+      amount: 5,
+    } as TransactionOutput);
   });
 
   test('GET /status - Should return status', async () => {
@@ -86,31 +96,32 @@ describe('BlockchainServer Tests', () => {
     expect(response.status).toEqual(422);
   });
 
-  test('POST /transactions - Should NOT add transactions with hash, txInput or to empty', async () => {
+  test('POST /transactions - Should NOT add transactions with hash, txInput or txOutputs empty', async () => {
     const transaction = new Transaction({
       type: TransactionType.REGULAR,
       timestamp: Date.now(),
-      txInput: txInput,
-      //to: 'PUBLIC_KEY_TARGET',
+      //txOutputs: [txOutput], //there is not txOutputs
+      txInputs: [txInput],
     } as Transaction);
 
     const response = await request(app)
       .post('/transactions/')
       .send([transaction]);
+    console.log(response.status);
     expect(response.status).toEqual(422);
   });
 
   test('POST /transactions - Should NOT add transactions as any transaction is invalid.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     tx2.hash = 'INVALIDATING_THE_HASH';
@@ -124,20 +135,20 @@ describe('BlockchainServer Tests', () => {
       .send(transactions);
 
     // console.log(response.status);
-    expect(response.status).toEqual(400);
+    expect(response.status).toEqual(422);
   });
 
   test('POST /transactions - Should successfully add transactions.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const transactions = new Array() as Transaction[];
@@ -155,14 +166,14 @@ describe('BlockchainServer Tests', () => {
   test('GET /transactions - Should retrieve a specific transaction on the blockchain.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const transactions = new Array() as Transaction[];
@@ -181,14 +192,14 @@ describe('BlockchainServer Tests', () => {
   test('GET /transactions - Should get all next transactions on the blockchain.', async () => {
     const tx1 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const tx2 = new Transaction({
       hash: '',
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txOutputs: [txOutput],
+      txInputs: [txInput],
     } as Transaction);
 
     const transactions = new Array() as Transaction[];

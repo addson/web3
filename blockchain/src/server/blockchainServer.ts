@@ -145,7 +145,7 @@ app.post(
       return res.status(201).json(transactions);
     }
 
-    return res.status(400).json({ error: validation });
+    return res.status(422).json({ error: validation });
   },
 );
 

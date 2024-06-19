@@ -5,37 +5,47 @@ import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
 import Wallet from '../src/lib/wallet';
+import TransactionOutput from '../src/lib/transactionOutput';
 
-//mocking the block class
+// //mocking the block class
 jest.mock('../src/lib/block');
 
 describe('Blockchain tests', () => {
   let wallet: Wallet;
+  let walletTo: Wallet;
   let txInput: TransactionInput;
+  let txOutput: TransactionOutput;
 
   beforeAll(() => {
     wallet = new Wallet();
+    walletTo = new Wallet();
+
     txInput = new TransactionInput({
       amount: 10,
       fromAddress: wallet.publicKey,
     } as TransactionInput);
     txInput.sign(wallet.privateKey);
+
+    txOutput = new TransactionOutput({
+      toAddress: walletTo.publicKey,
+      amount: 5,
+    } as TransactionOutput);
   });
 
   it('Should has the first GENESIS block', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     expect(blockchain.blocks.length).toBeGreaterThan(0);
   });
 
   it('Should be valid (Genesis)', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const validation = blockchain.isValid();
     // console.log(validation.message);
     expect(validation.success).toEqual(true);
   });
 
   it('Should find a block by hash', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const validation = blockchain.isValid();
     // console.log(validation.message);
 
@@ -49,7 +59,7 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT find a block by hash', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const validation = blockchain.isValid();
     // console.log(validation.message);
 
@@ -61,7 +71,7 @@ describe('Blockchain tests', () => {
   });
 
   it('Should be valid (two blocks)', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     blockchain.addBlock(
       new Block({
         index: 1,
@@ -69,8 +79,8 @@ describe('Blockchain tests', () => {
         transactions: [
           new Transaction({
             type: TransactionType.REGULAR,
-            txInput: txInput,
-            to: 'PUBLIC_KEY_TARGET',
+            txInputs: [txInput],
+            txOutputs: [txOutput],
           } as Transaction),
         ],
       } as Block),
@@ -81,12 +91,12 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT be valid (two blocks)', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -105,18 +115,18 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT add empty transactions', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const emptyTransactions = [] as Transaction[];
     const validation = blockchain.addTransactions(emptyTransactions);
     expect(validation.success).toEqual(false);
   });
 
   it('Should NOT add duplicated transactions in transactionsMemPool', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -130,12 +140,12 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT add duplicated transactions in Blockchain', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -159,18 +169,18 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT add transactions as at least one of these txs is invalid', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
     tx2.hash = 'INVALIDATING HASH';
 
@@ -181,18 +191,18 @@ describe('Blockchain tests', () => {
   });
 
   it('Should add transactions correctly', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const validation = blockchain.addTransactions([tx1, tx2] as Transaction[]);
@@ -202,19 +212,19 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT add transaction with pending tx', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
     blockchain.addTransactions([tx1] as Transaction[]);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET_2',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
     const validation = blockchain.addTransactions([tx2] as Transaction[]);
 
@@ -223,18 +233,18 @@ describe('Blockchain tests', () => {
   });
 
   it('Should get transaction from transactionsMemPool', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     blockchain.addTransactions([tx1, tx2] as Transaction[]);
@@ -253,21 +263,21 @@ describe('Blockchain tests', () => {
   });
 
   it('Should get transaction from some blockchain block', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET_1',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET_2',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
-    blockchain.addTransactions([tx1, tx2] as Transaction[]);
+    blockchain.addTransactions([tx1] as Transaction[]);
 
     blockchain.addBlock(
       new Block({
@@ -298,21 +308,21 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT found any transaction anywhere calling get transaction', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     //added just tx1
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
     blockchain.addTransactions([tx1] as Transaction[]);
 
     //tx2 not added, but we try search it on blockchain
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
     const transactionSearch = blockchain.getTransaction(tx2.hash);
 
@@ -323,12 +333,12 @@ describe('Blockchain tests', () => {
   });
 
   it('Should add block', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
 
     const tx = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     blockchain.transactionsMemPool.push(tx);
@@ -345,7 +355,7 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT add block', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const validation = blockchain.addBlock(
       new Block({
         index: 1,
@@ -353,8 +363,8 @@ describe('Blockchain tests', () => {
         transactions: [
           new Transaction({
             type: TransactionType.REGULAR,
-            txInput: txInput,
-            to: 'PUBLIC_KEY_TARGET',
+            txInputs: [txInput],
+            txOutputs: [txOutput],
           } as Transaction),
         ],
       } as Block),
@@ -364,7 +374,7 @@ describe('Blockchain tests', () => {
   });
 
   it('Should get the next block info from the blockchain for mining.', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     // adding a new transaction on transactionMemPool
     blockchain.transactionsMemPool.push(new Transaction());
     const info = blockchain.getNextBlock();
@@ -372,7 +382,7 @@ describe('Blockchain tests', () => {
   });
 
   it('Should NOT get the next block info from the blockchain for mining.', () => {
-    const blockchain = new Blockchain();
+    const blockchain = new Blockchain(wallet.publicKey);
     const info = blockchain.getNextBlock();
     // as transactionsMemPool is empty
     expect(info).toBeNull();

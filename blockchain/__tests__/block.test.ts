@@ -4,29 +4,44 @@ import BlockInfo from '../src/lib/blockInfo';
 import Transaction from '../src/lib/transaction';
 import TransactionType from '../src/lib/transactionType';
 import TransactionInput from '../src/lib/transactionInput';
+import TransactionOutput from '../src/lib/transactionOutput';
 import Wallet from '../src/lib/wallet';
 
 describe('Block tests', () => {
   const challengeDifficultExample = 1;
   const minerWalletExample = 'addson';
   let wallet: Wallet;
+  let walletTo: Wallet;
   let txInput: TransactionInput;
+  let txOutput: TransactionOutput;
+  let txOutputSameWalletTxInput: TransactionOutput;
   let genesis: Block;
 
   beforeAll(() => {
     wallet = new Wallet();
+    walletTo = new Wallet();
+
     txInput = new TransactionInput({
       amount: 10,
       fromAddress: wallet.publicKey,
     } as TransactionInput);
     txInput.sign(wallet.privateKey);
+    txOutputSameWalletTxInput = new TransactionOutput({
+      toAddress: wallet.publicKey,
+      amount: 5,
+    } as TransactionOutput);
+
+    txOutput = new TransactionOutput({
+      toAddress: walletTo.publicKey,
+      amount: 5,
+    } as TransactionOutput);
 
     genesis = new Block({
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -39,13 +54,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutputSameWalletTxInput],
         } as Transaction),
       ],
     } as Block);
@@ -70,8 +85,8 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -99,13 +114,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutputSameWalletTxInput],
         } as Transaction),
       ],
     } as BlockInfo);
@@ -147,13 +162,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -176,13 +191,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -225,13 +240,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -254,13 +269,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -283,13 +298,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -311,13 +326,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -341,13 +356,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -370,13 +385,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
@@ -395,8 +410,8 @@ describe('Block tests', () => {
   it('Should NOT be valid Block (as there is at least one Invalid Transaction)', () => {
     const invalidTx4 = new Transaction({
       type: TransactionType.REGULAR,
-      txInput: txInput,
-      to: 'PUBLIC_KEY_TARGET',
+      txInputs: [txInput],
+      txOutputs: [txOutput],
     } as Transaction);
 
     //invalidating the hash
@@ -408,13 +423,13 @@ describe('Block tests', () => {
       transactions: [
         new Transaction({
           type: TransactionType.REGULAR,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         new Transaction({
           type: TransactionType.FEE,
-          txInput: txInput,
-          to: wallet.publicKey,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
         } as Transaction),
         invalidTx4,
       ],
