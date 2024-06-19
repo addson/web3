@@ -163,6 +163,7 @@ export default class Block {
           .map(tx => tx.isValid())
           .filter(v => !v.success)
           .map(v => v.message);
+
         /* istanbul ignore next */
         return new Validation(
           false,

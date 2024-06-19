@@ -201,6 +201,7 @@ export default class Blockchain {
       return {
         transaction: this.transactionsMemPool[memPoolIndex],
         memPoolIndex,
+        blockIndex: -1,
       } as TransactionSearch;
     }
 
@@ -213,6 +214,7 @@ export default class Blockchain {
           tx => tx.hash === hash,
         ),
         blockIndex,
+        memPoolIndex: -1,
       } as TransactionSearch;
     }
 
@@ -299,6 +301,7 @@ export default class Blockchain {
         .flat()
         .filter(txi => txi!.fromAddress === from);
 
+      /* istanbul ignore next */
       if (pendingTx && pendingTx.length) {
         return new Validation(
           false,

@@ -214,4 +214,9 @@ describe('BlockchainServer Tests', () => {
     expect(response2.status).toEqual(200);
     // console.log(response2.status);
   });
+
+  test('GET /wallets/wallet - Should get a wallet', async () => {
+    const response = await request(app).get(`/wallets/${wallet.publicKey}`);
+    expect(response.status).toEqual(200);
+  });
 });

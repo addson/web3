@@ -354,8 +354,32 @@ describe('Blockchain tests', () => {
     expect(validation.success).toEqual(true);
   });
 
+  it('Should NOT add block (invalid transactions mainpool)', () => {
+    const blockchain = new Blockchain(wallet.publicKey);
+    blockchain.transactionsMemPool.push(new Transaction());
+    blockchain.transactionsMemPool.push(new Transaction());
+
+    const tx = new Transaction({
+      type: TransactionType.REGULAR,
+      txInputs: [txInput],
+      txOutputs: [txOutput],
+    } as Transaction);
+    //blockchain.transactionsMemPool.push(tx);
+
+    const validation = blockchain.addBlock(
+      new Block({
+        index: 1,
+        previousHash: blockchain.blocks[0].hash,
+        transactions: [tx],
+      } as Block),
+    );
+    // console.log(validation.message);
+    expect(validation.success).toBeFalsy();
+  });
+
   it('Should NOT add block', () => {
     const blockchain = new Blockchain(wallet.publicKey);
+    blockchain.transactionsMemPool.push(new Transaction());
     const validation = blockchain.addBlock(
       new Block({
         index: 1,
@@ -369,7 +393,7 @@ describe('Blockchain tests', () => {
         ],
       } as Block),
     );
-    // console.log(validation.message);
+    console.log(validation.message);
     expect(validation.success).toEqual(false);
   });
 

@@ -14,7 +14,6 @@ describe('Block tests', () => {
   let walletTo: Wallet;
   let txInput: TransactionInput;
   let txOutput: TransactionOutput;
-  let txOutputSameWalletTxInput: TransactionOutput;
   let genesis: Block;
 
   beforeAll(() => {
@@ -26,10 +25,6 @@ describe('Block tests', () => {
       fromAddress: wallet.publicKey,
     } as TransactionInput);
     txInput.sign(wallet.privateKey);
-    txOutputSameWalletTxInput = new TransactionOutput({
-      toAddress: wallet.publicKey,
-      amount: 5,
-    } as TransactionOutput);
 
     txOutput = new TransactionOutput({
       toAddress: walletTo.publicKey,
@@ -60,14 +55,14 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.FEE,
           txInputs: [txInput],
-          txOutputs: [txOutputSameWalletTxInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as Block);
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -93,7 +88,7 @@ describe('Block tests', () => {
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -120,14 +115,14 @@ describe('Block tests', () => {
         new Transaction({
           type: TransactionType.FEE,
           txInputs: [txInput],
-          txOutputs: [txOutputSameWalletTxInput],
+          txOutputs: [txOutput],
         } as Transaction),
       ],
     } as BlockInfo);
 
     //so that this block is valid we have to mine
     //a new hash that attends all requirements...
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -173,14 +168,14 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
       genesis.index,
       challengeDifficultExample,
     );
-    // console.log(valid.message);
+    console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
 
@@ -202,7 +197,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     block.timestamp = -1;
     block.hash = block.getHash(); //updating hash based on new
@@ -222,14 +217,14 @@ describe('Block tests', () => {
       transactions: [] as Array<Transaction>,
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
       genesis.index,
       challengeDifficultExample,
     );
-    // console.log(valid.message);
+    //console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
 
@@ -251,7 +246,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -280,7 +275,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -337,7 +332,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     block.hash = 'hash has been tampered with...';
     const valid = block.isValid(
@@ -367,7 +362,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -435,7 +430,7 @@ describe('Block tests', () => {
       ],
     } as Block);
 
-    block.mine(challengeDifficultExample, wallet.publicKey);
+    block.mine(challengeDifficultExample, walletTo.publicKey);
 
     const valid = block.isValid(
       genesis.hash,

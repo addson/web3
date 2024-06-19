@@ -124,19 +124,19 @@ app.post(
         } as Transaction) as Transaction,
     );
 
-    const invalidTransaction = transactions.find(
-      tx =>
-        tx.hash === undefined ||
-        tx.txInputs === undefined ||
-        tx.txOutputs === undefined ||
-        tx.hash === '' ||
-        tx.txOutputs.length < 0,
-    );
-    if (invalidTransaction) {
-      return res.status(422).json({
-        error: 'Each transaction should have both hash and data fields',
-      });
-    }
+    // const invalidTransaction = transactions.find(
+    //   tx =>
+    //     tx.hash === undefined ||
+    //     tx.txInputs === undefined ||
+    //     tx.txOutputs === undefined ||
+    //     tx.hash === '' ||
+    //     tx.txOutputs.length < 0,
+    // );
+    // if (invalidTransaction) {
+    //   return res.status(422).json({
+    //     error: 'Each transaction should have both hash and data fields',
+    //   });
+    // }
 
     const validation = blockchain.addTransactions(transactions);
     // console.log(validation);
@@ -152,7 +152,7 @@ app.post(
 app.get(
   '/wallets/:wallet',
   (req: Request, res: Response, next: NextFunction) => {
-    const wallet = req.params.waallet;
+    const wallet = req.params.wallet;
 
     //todo final version UTXO
 

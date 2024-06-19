@@ -10,6 +10,7 @@ describe('Transaction tests', () => {
   let walletTo: Wallet;
   let txInput: TransactionInput;
   let txOutput: TransactionOutput;
+  let txInputLessOutput: TransactionInput;
 
   beforeAll(() => {
     wallet = new Wallet();
@@ -25,6 +26,12 @@ describe('Transaction tests', () => {
       toAddress: walletTo.publicKey,
       amount: 5,
     } as TransactionOutput);
+
+    txInputLessOutput = new TransactionInput({
+      amount: 3,
+      fromAddress: wallet.publicKey,
+    } as TransactionInput);
+    txInputLessOutput.sign(wallet.privateKey);
   });
 
   it('Should be a transaction valid (REGULAR DEFAULT)', () => {
@@ -113,5 +120,27 @@ describe('Transaction tests', () => {
 
     const valid = tx.isValid();
     expect(valid.success).toEqual(false);
+  });
+
+  it('Should NOT be a transaction valid (inputs < outputs)', () => {
+    const tx = new Transaction({
+      txInputs: [txInputLessOutput],
+      txOutputs: [txOutput],
+    } as Transaction);
+
+    const valid = tx.isValid();
+    expect(valid.success).toBeFalsy();
+  });
+
+  it('Should NOT be a transaction valid (txOutput hash != txHash)', () => {
+    const tx = new Transaction({
+      txInputs: [txInput],
+      txOutputs: [txOutput],
+    } as Transaction);
+
+    tx.txOutputs[0].transactionHash = 'FORCE INVALID HASH';
+
+    const valid = tx.isValid();
+    expect(valid.success).toBeFalsy();
   });
 });
