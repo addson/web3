@@ -6,6 +6,7 @@ import TransactionType from './transactionType';
 import TransactionSearch from './transactionSearch';
 import TransactionInput from './transactionInput';
 import TransactionOutput from './transactionOutput';
+import Wallet from './wallet';
 
 /**
  * The blockchain class that represents all chain of blocks
@@ -290,27 +291,49 @@ export default class Blockchain {
       );
     }
 
-    if (transactions[0].txInputs && transactions[0].txInputs.length) {
-      /* istanbul ignore next */
-      const from = transactions[0].txInputs[0].fromAddress;
-      /* istanbul ignore next */
+    for (const transaction of transactions) {
+      if (transaction.txInputs && transaction.txInputs.length) {
+        /* istanbul ignore next */
+        const from = transaction.txInputs[0].fromAddress;
+        /* istanbul ignore next */
 
-      const pendingTx = this.transactionsMemPool
-        .filter(tx => tx.txInputs && tx.txInputs.length)
-        .map(tx => tx.txInputs)
-        .flat()
-        .filter(txi => txi!.fromAddress === from);
+        const pendingTx = this.transactionsMemPool
+          .filter(tx => tx.txInputs && tx.txInputs.length)
+          .map(tx => tx.txInputs)
+          .flat()
+          .filter(txi => txi!.fromAddress === from);
 
-      /* istanbul ignore next */
-      if (pendingTx && pendingTx.length) {
-        return new Validation(
-          false,
-          'This wallet has a pending transaction on main pool that has not mined yet, so could not be added.',
-        );
+        /* istanbul ignore next */
+        if (pendingTx && pendingTx.length) {
+          return new Validation(
+            false,
+            'This wallet has a pending transaction on main pool that has not mined yet, so could not be added.',
+          );
+        }
+
+        //validate the founds origin
+        const utxos = this.getUtxo(from);
+        for (let i = 0; i < transaction.txInputs.length; i++) {
+          const txi = transaction.txInputs[i];
+          //First validation: this spent from txInput on this transaction is in anywhere from utxos
+          //Second validation: this value to be spent from txInput on this transaction is less then the match utxo value
+          if (
+            utxos.findIndex(
+              utxo =>
+                utxo.transactionHash === txi.previousTx &&
+                utxo.amount >= txi.amount,
+            ) === -1
+          ) {
+            return new Validation(
+              false,
+              'Invalid Transaction: The TXO is already spent before or there is not on the UTXOs (Unspendable transaction outputs)',
+            );
+          }
+        }
       }
     }
 
-    //todo validate the founds origin
+    //todo final version that validate the taxes
 
     if (
       this.blocks.some(b =>
@@ -345,5 +368,55 @@ export default class Blockchain {
         '',
       )}`,
     );
+  }
+
+  getTxInputs(wallet: string): (TransactionInput | undefined)[] {
+    return this.blocks
+      .map(b => b.transactions)
+      .flat() //turn 2 dimensions array to just one
+      .filter(tx => tx.txInputs && tx.txInputs.length) //just txInputs > 0
+      .map(tx => tx.txInputs) //gets this txInputs
+      .flat() //again turn 2 dimensions array to just one
+      .filter(txi => txi!.fromAddress === wallet);
+  }
+
+  getTxOutputs(wallet: string): TransactionOutput[] {
+    return this.blocks
+      .map(b => b.transactions)
+      .flat() //turn 2 dimensions array to just one
+      .filter(tx => tx.txOutputs && tx.txOutputs.length) //just txOutputs > 0
+      .map(tx => tx.txOutputs) //gets this txOutputs
+      .flat() //again turn 2 dimensions array to just one
+      .filter(txo => txo!.toAddress === wallet);
+  }
+
+  getUtxo(wallet: string): TransactionOutput[] {
+    //getting all time this wallet spent
+    const txIns = this.getTxInputs(wallet);
+    //getting all time this wallet earn
+    const txOuts = this.getTxOutputs(wallet);
+
+    if (!txIns || !txIns.length) {
+      return txOuts;
+    }
+
+    txIns.forEach(txi => {
+      //where there is spent transaction
+      const index = txOuts.findIndex(txo => txo.amount === txi!.amount);
+      //if it was spent I remove this output as I just want the unspent
+      txOuts.splice(index, 1);
+    });
+
+    return txOuts;
+  }
+
+  getBalance(wallet: string): number {
+    const utxos = this.getUtxo(wallet);
+
+    if (!utxos || !utxos.length) {
+      return 0;
+    }
+
+    return utxos.reduce((a, b) => a + b.amount, 0);
   }
 }
