@@ -2,6 +2,7 @@ import * as ecc from 'tiny-secp256k1';
 import ECPairFactory from 'ecpair';
 import sha256 from 'crypto-js/sha256';
 import Validation from './validation';
+import TransactionOutput from './transactionOutput';
 
 //Object that will be used to generates the private and public keys.
 const ECPair = ECPairFactory(ecc);
@@ -83,5 +84,13 @@ export default class TransactionInput {
           'Invalid transaction Input signature using this public key: ' +
             this.fromAddress,
         );
+  }
+
+  static fromTxo(txo: TransactionOutput): TransactionInput {
+    return new TransactionInput({
+      amount: txo.amount, // full quantity from TransactionOutput
+      fromAddress: txo.toAddress, // origin from toAddress from TransactionOutput
+      previousTx: txo.transactionHash, // ogigin from transactionHash from TransactionOutput
+    } as TransactionInput);
   }
 }

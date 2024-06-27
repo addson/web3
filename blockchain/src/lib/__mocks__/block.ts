@@ -49,12 +49,17 @@ export default class Block {
    *
    * @returns Mock Validation if all these rules are valid
    */
-  isValid(previousHash: string, previousIndex: number): Validation {
+  isValid(
+    previousHash: string,
+    previousIndex: number,
+    feePerTx: number,
+  ): Validation {
     //this is not the complete validation used on real block class
     if (
       previousIndex < 0 ||
       this.previousHash !== previousHash ||
-      this.index < 0
+      this.index < 0 ||
+      feePerTx < 1
     ) {
       return new Validation(false, `Invalid mock block`);
     }

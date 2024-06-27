@@ -118,6 +118,7 @@ export default class Block {
     previousHash: string,
     previousIndex: number,
     difficultChallenge: number,
+    feePerTx: number,
   ): Validation {
     /** Not Allow empty transactions */
     if (!this.transactions || this.transactions.length === 0) {
@@ -155,12 +156,19 @@ export default class Block {
         );
       }
 
-      //todo validate fee quantity
+      //validate fee quantity
+      const totalFees =
+        feePerTx *
+        this.transactions.filter(tx => tx.type !== TransactionType.FEE).length;
 
       /** Not allowed any invalid transaction in the block*/
-      if (this.transactions.filter(tx => !tx.isValid().success).length > 0) {
+      if (
+        this.transactions.filter(
+          tx => !tx.isValid(difficultChallenge, totalFees).success,
+        ).length > 0
+      ) {
         const messageErrors = this.transactions
-          .map(tx => tx.isValid())
+          .map(tx => tx.isValid(difficultChallenge, feePerTx))
           .filter(v => !v.success)
           .map(v => v.message);
 

@@ -122,7 +122,7 @@ export default class Blockchain {
       );
     }
 
-    const validations = transactions.map(tx => tx.isValid());
+    const validations = transactions.map(tx => tx.isValid(1, 10));
     if (validations.filter(val => !val.success).length > 0) {
       return new Validation(
         false,
@@ -168,5 +168,33 @@ export default class Blockchain {
     }
 
     return { blockIndex: -1, memPoolIndex: -1 } as TransactionSearch;
+  }
+
+  getTxInputs(wallet: string): (TransactionInput | undefined)[] {
+    return [
+      new TransactionInput({
+        amount: 10,
+        fromAddress: wallet,
+        previousTx: 'abc',
+        signature: 'abc',
+      } as TransactionInput),
+    ];
+  }
+
+  getTxOutputs(wallet: string): (TransactionOutput | undefined)[] {
+    return [
+      new TransactionOutput({
+        amount: 10,
+        toAddress: wallet,
+        transactionHash: 'abc',
+      } as TransactionOutput),
+    ];
+  }
+  getUtxo(wallet: string): (TransactionOutput | undefined)[] {
+    return this.getTxOutputs(wallet);
+  }
+
+  getBalance(wallet: string): number {
+    return 10;
   }
 }

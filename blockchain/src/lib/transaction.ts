@@ -3,6 +3,7 @@ import sha256 from 'crypto-js/sha256';
 import Validation from './validation';
 import TransactionInput from './transactionInput';
 import TransactionOutput from './transactionOutput';
+import Blockchain from './blockchain';
 
 /**
  * Transaction class to represents a block transaction.
@@ -57,7 +58,7 @@ export default class Transaction {
   /**
    * This contains some rules to validate this transaction
    */
-  isValid(): Validation {
+  isValid(difficulty: number, feesTotal: number): Validation {
     if (this.hash !== this.getHash())
       return new Validation(false, 'Invalid Hash');
 
@@ -100,7 +101,17 @@ export default class Transaction {
       );
     }
 
-    //todo validates the fees and rewards when tx type equals FEE
+    //validates the fees and rewards when tx type equals FEE
+    if (this.type === TransactionType.FEE) {
+      const txo = this.txOutputs[0]; //it has only one
+
+      //rewards fees for miner:
+      //fees as this block was minned for this miner
+      //transaction fee x number of transactions
+      if (txo.amount > Blockchain.getRewardAmount(difficulty) + feesTotal) {
+        return new Validation(false, 'Invalid tx reward to miner');
+      }
+    }
 
     return new Validation();
   }

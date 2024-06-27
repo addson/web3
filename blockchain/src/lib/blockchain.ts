@@ -112,6 +112,7 @@ export default class Blockchain {
       nextBlock.previousHash,
       nextBlock.index - 1,
       nextBlock.difficultChallenge,
+      this.getFeePerTx(),
     );
 
     if (!validation.success)
@@ -166,6 +167,7 @@ export default class Blockchain {
         lastBlock.hash,
         lastBlock.index,
         this.generatesDifficultChallengeGoldenNumber(currentBlock.index),
+        this.getFeePerTx(),
       );
 
       if (!validation.success)
@@ -333,8 +335,6 @@ export default class Blockchain {
       }
     }
 
-    //todo final version that validate the taxes
-
     if (
       this.blocks.some(b =>
         b.transactions.some(txBlock =>
@@ -348,7 +348,12 @@ export default class Blockchain {
       );
     }
 
-    const validations = transactions.map(tx => tx.isValid());
+    const validations = transactions.map(tx =>
+      tx.isValid(
+        this.generatesDifficultChallengeGoldenNumber(),
+        this.getFeePerTx(),
+      ),
+    );
     if (validations.filter(val => !val.success).length > 0) {
       return new Validation(
         false,
@@ -418,5 +423,9 @@ export default class Blockchain {
     }
 
     return utxos.reduce((a, b) => a + b.amount, 0);
+  }
+
+  static getRewardAmount(difficulty: number): number {
+    return (64 - difficulty) * 10;
   }
 }

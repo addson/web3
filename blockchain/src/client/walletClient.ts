@@ -97,15 +97,18 @@ function recoverWallet() {
   });
 }
 
-function balance() {
+async function balance() {
   console.clear();
 
   if (!myWalletPub) {
     console.log(`You do not have a wallet yet!`);
-
-    //todo getBalance using API Calling using publicKey
     preMenu();
   }
+  const { data } = await axios.get(
+    `${BLOCKCHAIN_SERVER}wallets/${myWalletPub}`,
+  );
+  console.log(data.balance);
+  preMenu();
 }
 
 function sendTx() {
@@ -149,25 +152,43 @@ function sendTx() {
         return preMenu();
       }
 
-      const transaction = new Transaction();
-      transaction.timestamp = Date.now();
-      transaction.txOutputs = [
+      // for each output I generate a new full Input and after a send back the change with a new output
+      const txInputs = utxo.map(txo => TransactionInput.fromTxo(txo));
+      txInputs.forEach((txi, index, arr) => arr[index].sign(myWalletPriv));
+
+      const txOutputs = [] as TransactionOutput[];
+
+      //transfer output
+      txOutputs.push(
         new TransactionOutput({
           toAddress: walletTo,
           amount,
         } as TransactionOutput),
-      ];
+      );
+
+      //change output
+      const remainningBalance = balance - amount - fee;
+      txOutputs.push(
+        new TransactionOutput({
+          toAddress: myWalletPub,
+          amount: remainningBalance,
+        } as TransactionOutput),
+      );
+
+      const transaction = new Transaction({
+        txInputs,
+        txOutputs,
+      } as Transaction);
+      transaction.timestamp = Date.now();
       transaction.type = TransactionType.REGULAR;
-      transaction.txInputs = [
-        new TransactionInput({
-          amount,
-          fromAddress: myWalletPub,
-          previousTx: utxo[0].transactionHash,
-        } as TransactionInput),
-      ];
-      transaction.txInputs[0].sign(myWalletPriv);
+
       transaction.hash = transaction.getHash();
-      transaction.txOutputs[0].transactionHash = transaction.hash;
+      transaction.txOutputs.forEach(
+        (txo, index, arr) => (arr[index].transactionHash = transaction.hash),
+      );
+
+      console.log(transaction);
+      console.log(`remainningBalance: ${remainningBalance}`);
 
       try {
         const transactionResponse = await axios.post(
