@@ -8,26 +8,64 @@ import Wallet from '../lib/wallet';
 import Transaction from '../lib/transaction';
 import TransactionType from '../lib/transactionType';
 import TransactionOutput from '../lib/transactionOutput';
+import Blockchain from '../lib/blockchain';
 
 const BLOCKCHAIN_SERVER = process.env.BLOCKCHAIN_SERVER;
 
 let totalMined = 0;
 
-function getRewardTx(): Transaction {
+function getRewardTx(
+  blockInfo: BlockInfo,
+  nextBlock: Block,
+): Transaction | undefined {
+  let amount = 0;
+
+  if (blockInfo.difficultChallenge >= blockInfo.maxDifficultChallenge) {
+    amount += Blockchain.getRewardAmount(blockInfo.difficultChallenge);
+  }
+
+  //all fees related all transactions of this block
+  // const fees = nextBlock.transactions
+  //   .map(tx => tx.getFee())
+  //   .reduce((a, b) => a + b, 0);
+  // all fees related to all transactions of this block
+  const fees = nextBlock.transactions
+    .map(tx => {
+      // Converte para uma instância de Transaction se não for uma
+      if (!(tx instanceof Transaction)) {
+        tx = new Transaction(tx);
+      }
+
+      if (typeof tx.getFee === 'function') {
+        return tx.getFee();
+      } else {
+        console.error('getFee is not a function for transaction', tx);
+        return 0; // ou outra lógica para lidar com a ausência da função
+      }
+    })
+    .reduce((a, b) => a + b, 0);
+
+  console.log('Total fees:', fees);
+
+  //checking if there is any malicious wallet is not passing fees to miner
+  const feeCheck = nextBlock.transactions.length * blockInfo.feePerTx;
+  if (fees < feeCheck) {
+    console.log('Low fees. Awaiting next block.');
+    setTimeout(() => {
+      mine();
+    }, 5000);
+
+    return;
+  }
+  //if fees are correct
+  amount += fees;
+
   const txo = new TransactionOutput({
     toAddress: minerWallet.publicKey,
-    amount: 10,
+    amount,
   } as TransactionOutput);
 
-  const tx = new Transaction({
-    txOutputs: [txo],
-    type: TransactionType.FEE,
-  } as Transaction);
-
-  tx.hash = tx.getHash();
-  tx.txOutputs[0].transactionHash = tx.hash;
-
-  return tx;
+  return Transaction.fromReward(txo);
 }
 
 const minerWallet = new Wallet(process.env.MINER_WALLET);
@@ -49,7 +87,9 @@ async function mine() {
   }
   const blockInfo = data as BlockInfo;
   const newBlock = Block.blockInfoToBlock(blockInfo);
-  newBlock.transactions.push(getRewardTx());
+  const tx = getRewardTx(blockInfo, newBlock);
+  if (!tx) return;
+  newBlock.transactions.push(tx);
 
   newBlock.miner = minerWallet.publicKey;
   newBlock.hash = newBlock.getHash();

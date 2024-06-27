@@ -55,6 +55,25 @@ export default class Transaction {
     ).toString();
   }
 
+  getFee(): number {
+    let inputsSum: number = 0,
+      outputsSum: number = 0;
+    if (this.txInputs && this.txInputs.length) {
+      inputsSum = this.txInputs.map(txi => txi.amount).reduce((a, b) => a + b);
+
+      if (this.txOutputs && this.txOutputs.length) {
+        outputsSum = this.txOutputs
+          .map(txo => txo.amount)
+          .reduce((a, b) => a + b);
+      }
+
+      return inputsSum - outputsSum;
+    }
+
+    //if there is not inputs
+    return 0;
+  }
+
   /**
    * This contains some rules to validate this transaction
    */
@@ -114,5 +133,17 @@ export default class Transaction {
     }
 
     return new Validation();
+  }
+
+  static fromReward(txo: TransactionOutput): Transaction {
+    const tx = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [txo],
+    } as Transaction);
+
+    tx.hash = tx.getHash();
+    tx.txOutputs[0].transactionHash = tx.hash;
+
+    return tx;
   }
 }
