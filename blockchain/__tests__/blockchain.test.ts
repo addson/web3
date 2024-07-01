@@ -192,20 +192,16 @@ describe('Blockchain tests', () => {
 
   it('Should add transactions correctly', () => {
     const blockchain = new Blockchain(wallet.publicKey);
+    const txg = blockchain.blocks[0].transactions[0];
 
+    txInput.previousTx = txg.hash;
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
       txInputs: [txInput],
       txOutputs: [txOutput],
     } as Transaction);
 
-    const tx2 = new Transaction({
-      type: TransactionType.REGULAR,
-      txInputs: [txInput],
-      txOutputs: [txOutput],
-    } as Transaction);
-
-    const validation = blockchain.addTransactions([tx1, tx2] as Transaction[]);
+    const validation = blockchain.addTransactions([tx1] as Transaction[]);
 
     // console.log(validation.message);
     expect(validation.success).toEqual(true);
@@ -213,13 +209,6 @@ describe('Blockchain tests', () => {
 
   it('Should NOT add transaction with pending tx', () => {
     const blockchain = new Blockchain(wallet.publicKey);
-
-    const tx1 = new Transaction({
-      type: TransactionType.REGULAR,
-      txInputs: [txInput],
-      txOutputs: [txOutput],
-    } as Transaction);
-    blockchain.addTransactions([tx1] as Transaction[]);
 
     const tx2 = new Transaction({
       type: TransactionType.REGULAR,
@@ -234,6 +223,8 @@ describe('Blockchain tests', () => {
 
   it('Should get transaction from transactionsMemPool', () => {
     const blockchain = new Blockchain(wallet.publicKey);
+    const txg = blockchain.blocks[0].transactions[0];
+    txInput.previousTx = txg.hash;
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
@@ -241,13 +232,7 @@ describe('Blockchain tests', () => {
       txOutputs: [txOutput],
     } as Transaction);
 
-    const tx2 = new Transaction({
-      type: TransactionType.REGULAR,
-      txInputs: [txInput],
-      txOutputs: [txOutput],
-    } as Transaction);
-
-    blockchain.addTransactions([tx1, tx2] as Transaction[]);
+    blockchain.addTransactions([tx1] as Transaction[]);
 
     const transactionSearch = blockchain.getTransaction(tx1.hash);
     //It always will be found on memPool
@@ -264,6 +249,8 @@ describe('Blockchain tests', () => {
 
   it('Should get transaction from some blockchain block', () => {
     const blockchain = new Blockchain(wallet.publicKey);
+    const txg = blockchain.blocks[0].transactions[0];
+    txInput.previousTx = txg.hash;
 
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,

@@ -107,7 +107,7 @@ describe('BlockchainServer Tests', () => {
     const response = await request(app)
       .post('/transactions/')
       .send([transaction]);
-    console.log(response.status);
+    // console.log(response.status);
     expect(response.status).toEqual(422);
   });
 

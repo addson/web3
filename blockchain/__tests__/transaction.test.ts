@@ -11,6 +11,8 @@ describe('Transaction tests', () => {
   let txInput: TransactionInput;
   let txOutput: TransactionOutput;
   let txInputLessOutput: TransactionInput;
+  const exampleDifficult: number = -1;
+  const exampleFee: number = -1;
 
   beforeAll(() => {
     wallet = new Wallet();
@@ -40,7 +42,7 @@ describe('Transaction tests', () => {
       txOutputs: [txOutput],
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toEqual(true);
   });
 
@@ -51,7 +53,7 @@ describe('Transaction tests', () => {
       txInputs: [txInput],
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     // console.log(valid.message);
     expect(valid.success).toEqual(true);
   });
@@ -68,7 +70,7 @@ describe('Transaction tests', () => {
       txInputs: [txInputNotAssigned],
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     // console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
@@ -86,7 +88,7 @@ describe('Transaction tests', () => {
       txOutputs: [txOutput],
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     // console.log(valid.message);
     expect(valid.success).toEqual(false);
   });
@@ -98,7 +100,7 @@ describe('Transaction tests', () => {
       hash: 'abc',
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toEqual(false);
   });
 
@@ -111,14 +113,14 @@ describe('Transaction tests', () => {
     //invalidating the hash
     tx.hash = 'INVALIDATING HASH';
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toEqual(false);
   });
 
   it('Should NOT be a transaction valid (empty data)', () => {
     const tx = new Transaction();
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toEqual(false);
   });
 
@@ -128,7 +130,7 @@ describe('Transaction tests', () => {
       txOutputs: [txOutput],
     } as Transaction);
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toBeFalsy();
   });
 
@@ -140,7 +142,7 @@ describe('Transaction tests', () => {
 
     tx.txOutputs[0].transactionHash = 'FORCE INVALID HASH';
 
-    const valid = tx.isValid();
+    const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toBeFalsy();
   });
 });
