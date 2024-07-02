@@ -196,9 +196,7 @@ describe('Block tests', () => {
 
   it('Should NOT be valid (timestamp)', () => {
     const block = getFullBlock();
-    block.transactions[0].timestamp = -1;
-    block.hash = block.getHash(); //updating hash based on new timestamp
-    block.mine(challengeDifficultExample, walletTo.publicKey);
+    block.timestamp = -1;
 
     const valid = block.isValid(
       genesis.hash,
@@ -230,7 +228,7 @@ describe('Block tests', () => {
     const block = getFullBlock();
     block.previousHash = 'INVALID PREVIOUS HASH';
     block.hash = block.getHash(); //updating hash based on new previousHash
-    block.mine(challengeDifficultExample, walletTo.publicKey);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,
@@ -246,7 +244,7 @@ describe('Block tests', () => {
     const block = getFullBlock();
     block.index = -1;
     block.hash = block.getHash(); //updating hash based on new index
-    block.mine(challengeDifficultExample, walletTo.publicKey);
+    block.mine(challengeDifficultExample, wallet.publicKey);
 
     const valid = block.isValid(
       genesis.hash,

@@ -125,6 +125,21 @@ export default class Block {
       return new Validation(false, 'Invalid Block as transactions are empty.');
     }
 
+    if (previousIndex !== this.index - 1) {
+      return new Validation(false, `Invalid index: ${this.index}`);
+    }
+
+    if (this.previousHash !== previousHash) {
+      return new Validation(
+        false,
+        `Invalid previousHash: ${this.previousHash}`,
+      );
+    }
+
+    if (this.timestamp < 1) {
+      return new Validation(false, `Invalid timestamp: ${this.timestamp}`);
+    }
+
     if (this.transactions && this.transactions.length) {
       if (!this.nonce || this.nonce < 1 || !this.miner) {
         return new Validation(false, `This Block was NOT Mined`);
@@ -171,7 +186,6 @@ export default class Block {
           .map(tx => tx.isValid(difficultChallenge, feePerTx))
           .filter(v => !v.success)
           .map(v => v.message);
-
         /* istanbul ignore next */
         return new Validation(
           false,
@@ -182,21 +196,6 @@ export default class Block {
             ),
         );
       }
-    }
-
-    if (previousIndex !== this.index - 1) {
-      return new Validation(false, `Invalid index: ${this.index}`);
-    }
-
-    if (this.previousHash !== previousHash) {
-      return new Validation(
-        false,
-        `Invalid previousHash: ${this.previousHash}`,
-      );
-    }
-
-    if (this.timestamp < 1) {
-      return new Validation(false, `Invalid timestamp: ${this.timestamp}`);
     }
 
     // Returns a quantity of zeros that have to be put before the next hash mined.

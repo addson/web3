@@ -13,6 +13,8 @@ describe('Transaction tests', () => {
   let txInputLessOutput: TransactionInput;
   const exampleDifficult: number = -1;
   const exampleFee: number = -1;
+  const exampleTx: string =
+    '62ab3a6d203e513c0ab98663c053c8f520cf799309f4f762cf2d6482d8ca8283';
 
   beforeAll(() => {
     wallet = new Wallet();
@@ -144,5 +146,104 @@ describe('Transaction tests', () => {
 
     const valid = tx.isValid(exampleDifficult, exampleFee);
     expect(valid.success).toBeFalsy();
+  });
+
+  it('Should get Fee', () => {
+    txInput.previousTx = exampleTx;
+    txInput.amount = 11;
+    txOutput.amount = 8;
+    txInput.sign(wallet.privateKey);
+    const tx = new Transaction({
+      txInputs: [txInput],
+      txOutputs: [txOutput],
+    } as Transaction);
+
+    const result = tx.getFee();
+    expect(result).toBeGreaterThan(0);
+  });
+
+  it('Should get zero Fee', () => {
+    const tx = new Transaction({
+      txInputs: undefined,
+      txOutputs: [txOutput],
+    } as Transaction);
+
+    const result = tx.getFee();
+    expect(result).toEqual(0);
+  });
+
+  it('Should create from rewards', () => {
+    txOutput.transactionHash = exampleTx;
+    const tx = Transaction.fromReward(txOutput);
+
+    const valid = tx.isValid(exampleDifficult, exampleFee);
+    expect(valid.success).toBeTruthy();
+  });
+
+  it('Should NOT be a transaction valid (fee excess)', () => {
+    txOutput.amount = Number.MAX_VALUE;
+    const tx = new Transaction({
+      txOutputs: [txOutput],
+      type: TransactionType.FEE,
+    } as Transaction);
+    const valid = tx.isValid(exampleDifficult, exampleFee);
+    expect(valid.success).toBeFalsy();
+  });
+
+  it('should calculate fee correctly with valid inputs and outputs', () => {
+    const txInputs = [
+      { amount: 100 } as TransactionInput,
+      { amount: 200 } as TransactionInput,
+    ];
+    const txOutputs = [
+      { amount: 50 } as TransactionOutput,
+      { amount: 100 } as TransactionOutput,
+    ];
+    const transaction = new Transaction();
+    transaction.txInputs = txInputs;
+    transaction.txOutputs = txOutputs;
+
+    const fee = transaction.getFee();
+    expect(fee).toBe(150);
+  });
+
+  it('should return 0 if there are no inputs', () => {
+    const transaction = new Transaction();
+    transaction.txInputs = [];
+    transaction.txOutputs = [{ amount: 50 } as TransactionOutput];
+
+    const fee = transaction.getFee();
+    expect(fee).toBe(0);
+  });
+
+  it('should calculate fee correctly with inputs but no outputs', () => {
+    const txInputs = [
+      { amount: 100 } as TransactionInput,
+      { amount: 200 } as TransactionInput,
+    ];
+    const transaction = new Transaction();
+    transaction.txInputs = txInputs;
+    transaction.txOutputs = [];
+
+    const fee = transaction.getFee();
+    expect(fee).toBe(300);
+  });
+
+  it('should return 0 if inputs are undefined', () => {
+    const transaction = new Transaction();
+    transaction.txOutputs = [{ amount: 50 } as TransactionOutput];
+
+    const fee = transaction.getFee();
+    expect(fee).toBe(0);
+  });
+
+  it('should handle reduce correctly if there is only one input', () => {
+    const txInputs = [{ amount: 100 } as TransactionInput];
+    const transaction = new Transaction();
+    transaction.txInputs = txInputs;
+    transaction.txOutputs = [{ amount: 50 } as TransactionOutput];
+
+    const fee = transaction.getFee();
+    expect(fee).toBe(50);
   });
 });

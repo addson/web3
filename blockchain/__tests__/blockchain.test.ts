@@ -16,6 +16,12 @@ describe('Blockchain tests', () => {
   let txInput: TransactionInput;
   let txOutput: TransactionOutput;
 
+  const challengeDifficultExample: number = 1;
+  const exampleFee: number = 1;
+  const exampleTx: string =
+    '29810531fb9a9b748f4080d1856a56d0521fec2f77b2ed56aceae65b0d9c7ee1';
+  let genesis: Block;
+
   beforeAll(() => {
     wallet = new Wallet();
     walletTo = new Wallet();
@@ -30,7 +36,55 @@ describe('Blockchain tests', () => {
       toAddress: walletTo.publicKey,
       amount: 5,
     } as TransactionOutput);
+
+    genesis = new Block({
+      transactions: [
+        new Transaction({
+          type: TransactionType.FEE,
+          txInputs: [txInput],
+          txOutputs: [txOutput],
+        } as Transaction),
+      ],
+    } as Block);
   });
+
+  function getFullBlock(): Block {
+    const txInput = new TransactionInput({
+      amount: 10,
+      fromAddress: wallet.publicKey,
+      previousTx: exampleTx,
+    } as TransactionInput);
+    txInput.sign(wallet.privateKey);
+
+    const txOutput = new TransactionOutput({
+      amount: 10,
+      toAddress: walletTo.publicKey,
+    } as TransactionOutput);
+
+    const transaction = new Transaction({
+      txInputs: [txInput],
+      txOutputs: [txOutput],
+    } as Transaction);
+
+    const txFee = new Transaction({
+      type: TransactionType.FEE,
+      txOutputs: [
+        new TransactionOutput({
+          amount: 1,
+          toAddress: wallet.publicKey,
+        } as TransactionOutput),
+      ],
+    } as Transaction);
+
+    const block = new Block({
+      index: 1,
+      transactions: [transaction, txFee],
+      previousHash: genesis.hash,
+    } as Block);
+    block.mine(challengeDifficultExample, wallet.publicKey);
+
+    return block;
+  }
 
   it('Should has the first GENESIS block', () => {
     const blockchain = new Blockchain(wallet.publicKey);
@@ -141,28 +195,9 @@ describe('Blockchain tests', () => {
 
   it('Should NOT add duplicated transactions in Blockchain', () => {
     const blockchain = new Blockchain(wallet.publicKey);
+    const txo = blockchain.blocks[0].transactions[0];
 
-    const tx = new Transaction({
-      type: TransactionType.REGULAR,
-      txInputs: [txInput],
-      txOutputs: [txOutput],
-    } as Transaction);
-
-    blockchain.transactionsMemPool.push(tx);
-
-    blockchain.addBlock(
-      new Block({
-        index: 1,
-        previousHash: blockchain.blocks[0].hash,
-        transactions: [tx],
-      } as Block),
-    );
-
-    const validation = blockchain.addTransactions([
-      blockchain.blocks[1].transactions.find(
-        txActual => txActual.hash === tx.hash,
-      ),
-    ] as Transaction[]);
+    const validation = blockchain.addTransactions([txo] as Transaction[]);
 
     // console.log(validation.message);
     expect(validation.success).toEqual(false);
@@ -171,20 +206,18 @@ describe('Blockchain tests', () => {
   it('Should NOT add transactions as at least one of these txs is invalid', () => {
     const blockchain = new Blockchain(wallet.publicKey);
 
+    //it is to not fire unspendable transaction output
+    const txo = blockchain.blocks[0].transactions[0];
+    txInput.previousTx = txo.hash;
+
     const tx1 = new Transaction({
       type: TransactionType.REGULAR,
       txInputs: [txInput],
       txOutputs: [txOutput],
     } as Transaction);
+    tx1.hash = 'WRONG HASH';
 
-    const tx2 = new Transaction({
-      type: TransactionType.REGULAR,
-      txInputs: [txInput],
-      txOutputs: [txOutput],
-    } as Transaction);
-    tx2.hash = 'INVALIDATING HASH';
-
-    const validation = blockchain.addTransactions([tx1, tx2] as Transaction[]);
+    const validation = blockchain.addTransactions([tx1] as Transaction[]);
 
     // console.log(validation.message);
     expect(validation.success).toEqual(false);
@@ -380,7 +413,7 @@ describe('Blockchain tests', () => {
         ],
       } as Block),
     );
-    console.log(validation.message);
+    // console.log(validation.message);
     expect(validation.success).toEqual(false);
   });
 
@@ -397,5 +430,52 @@ describe('Blockchain tests', () => {
     const info = blockchain.getNextBlock();
     // as transactionsMemPool is empty
     expect(info).toBeNull();
+  });
+
+  it('Should getBalance from a wallet', () => {
+    const blockchain = new Blockchain(wallet.publicKey);
+    const block = getFullBlock();
+    blockchain.addBlock(block);
+    const result = blockchain.getBalance(wallet.publicKey);
+    //console.log(result);
+    expect(result).toEqual(630);
+  });
+
+  it('Should get zero Balance from a wallet', () => {
+    const blockchain = new Blockchain(wallet.publicKey);
+    const result = blockchain.getBalance(walletTo.publicKey);
+    //console.log(result);
+    expect(result).toEqual(0);
+  });
+
+  it('Should get UTXO', () => {
+    const blockchain = new Blockchain(wallet.publicKey);
+
+    //it is to not fire unspendable transaction output
+    const txo = blockchain.blocks[0].transactions[0];
+    txInput.previousTx = txo.hash;
+
+    const tx1 = new Transaction({
+      type: TransactionType.REGULAR,
+      txInputs: [txInput],
+      txOutputs: [
+        txOutput,
+        new TransactionOutput({
+          toAddress: wallet.publicKey,
+          amount: 4,
+        } as TransactionOutput),
+      ],
+    } as Transaction);
+
+    blockchain.blocks.push(
+      new Block({
+        index: 1,
+        transactions: [tx1],
+      } as Block),
+    );
+
+    const result = blockchain.getUtxo(wallet.publicKey);
+    // console.log(result);
+    expect(result.length).toBeGreaterThan(0);
   });
 });
