@@ -15,7 +15,7 @@ Instructions on how to install and configure the project.
 1. Clone the repository:
 
    ```bash
-   git clone <URL_do_repositorio>
+   git clone https://github.com/addson/web3
    cd blockchain
    ```
 
